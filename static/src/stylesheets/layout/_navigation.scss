@@ -10,8 +10,10 @@
 @import 'nav/_pillars';
 @import 'nav/_pillar-link';
 
+@import 'nav/_cta-bar';
 @import 'nav/_top-bar';
 @import 'nav/_top-bar-dropdown';
+@import 'nav/_search-dropdown';
 
 @import 'nav/_subnav';
 @import 'nav/_subnav-link';
@@ -21,5 +23,6 @@
 
 @import 'nav/_main-menu-toggle';
 @import 'nav/_edition-picker-toggle';
+@import 'nav/_my-account';
 
 @import 'nav/_colours';

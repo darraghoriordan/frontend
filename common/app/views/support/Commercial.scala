@@ -5,7 +5,7 @@ import common.Edition
 import common.commercial._
 import layout.{ColumnAndCards, ContentCard, FaciaContainer, PaidCard}
 import model.DotcomContentType.Signup
-import model.{Page, PressedPage}
+import model.{ContentType, Page, PressedPage}
 import org.apache.commons.lang.StringEscapeUtils._
 import play.api.libs.json.JsBoolean
 import play.api.mvc.RequestHeader
@@ -21,13 +21,24 @@ object Commercial {
     }
   }
 
-  def shouldShowAds(page: Page): Boolean = page match {
-    case c: model.ContentPage if c.item.content.shouldHideAdverts => false
-    case p: model.Page if p.metadata.sectionId == "identity" => false
-    case s: model.SimplePage if s.metadata.contentType.contains(Signup) => false
-    case e: model.ContentPage if e.item.content.seriesName.contains("Newsletter sign-ups") => false
-    case _: model.CommercialExpiryPage => false
-    case _ => true
+  def isOnDarkBackground(content: ContentType, isPaidContent: Boolean): Boolean = {
+    content.tags.isGallery ||
+      (!isPaidContent && (content.tags.isAudio || content.tags.isVideo))
+  }
+
+  def shouldShowAds(page: Page)(implicit request: RequestHeader): Boolean = {
+    if (request.queryString.get("forceads").isDefined) {
+      true
+    } else {
+      page match {
+        case c: model.ContentPage if c.item.content.shouldHideAdverts => false
+        case p: model.Page if p.metadata.sectionId == "identity" => false
+        case s: model.SimplePage if s.metadata.contentType.contains(Signup) => false
+        case e: model.ContentPage if e.item.content.seriesName.contains("Newsletter sign-ups") => false
+        case _: model.CommercialExpiryPage => false
+        case _ => true
+      }
+    }
   }
 
   def articleAsideOptionalSizes(implicit request: RequestHeader): Seq[String] = Edition(request).id match {

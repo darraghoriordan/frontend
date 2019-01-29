@@ -1,6 +1,6 @@
 /* ==========================================================================
-   Pop-up
-   ========================================================================== */
+    Pop-up
+    ========================================================================== */
 $popup-top: $headerHeight + $gs-baseline/2 + 3;
 
 // Popups align with the label, so if there's a control icon, we need to account
@@ -175,7 +175,7 @@ $control-offset: 36 + $gs-gutter/2;
 
 
 /* Profile Menu
-   ========================================================================== */
+    ========================================================================== */
 .brand-bar__item--profile {
     // stupid having to reset this, but :not was :not available to all in 2009
     @if ($old-ie == true) {
@@ -197,40 +197,23 @@ $control-offset: 36 + $gs-gutter/2;
 }
 
 /* Search Menu
-   ========================================================================== */
-
+    ========================================================================== */
 .popup--search {
-    z-index: $zindex-modal;
-    padding: 0;
-    right: 0;
-    padding-top: 5px; // manual amount, determined by google, not guss-grid-system
-    min-height: 51px; // manual amount, determined by google, not guss-grid-system
-    top: $headerHeight -2 + $gs-baseline / 2;
+    background-color: $brightness-100;
+    border-radius: $gs-baseline / 4;
+    box-shadow: 0 0 0 1px rgba(0, 0, 0, .1);
+    padding: $gs-baseline $gs-gutter 0;
+    top: ($gs-baseline * 2) + $gs-baseline / 2;
+    z-index: $zindex-main-menu + 1;
+    outline: 0;
+    left: auto;
+    right: 250px;
+}
 
-    @include mq(mobileLandscape) {
-        top: $popup-top;
-    }
-
-    @include mq(tablet) {
-        right: auto;
-        width: gs-span(8) + $gs-gutter;
-        min-height: 68px;
-        left: $gs-gutter/2;
-        padding: $gs-gutter;
-        padding-top: $gs-gutter + 5px; // manual amount, determined by google, not guss-grid-system
-    }
-
-    @include mq(leftCol) {
-        left: 50%;
-        margin-left: 0 - (gs-span(7) + $gs-gutter);
-    }
-
-    @include mq(wide) {
-        margin-left: 0 - (gs-span(8) + $gs-gutter);
-    }
-
-    // account for google search sizes.
-    .search-box {
-        margin-bottom: -1px;
+body:not(.has-page-skin) {
+    .popup--search {
+        @include mq(wide) {
+            right: 325px;
+        }
     }
 }

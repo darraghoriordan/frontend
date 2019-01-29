@@ -17,17 +17,14 @@ export const acquisitionsEpicControlTemplate = ({
     `<div class="contributions__epic ${epicClass}" data-component="${componentName}" data-link-name="epic">
         <div class="${wrapperClass}">
             <div>
-                <h2 class="contributions__title contributions__title--epic">
+                <h2 class="contributions__title">
                     ${heading}
                 </h2>
                 ${appendToLastElement(
                     paragraphs,
                     ` <strong><span class="contributions__highlight">${highlightedText}</span></strong>`
                 )
-                    .map(
-                        paragraph =>
-                            `<p class="contributions__paragraph contributions__paragraph--epic">${paragraph}</p>`
-                    )
+                    .map(paragraph => `<p>${paragraph}</p>`)
                     .join('')}
             </div>
     

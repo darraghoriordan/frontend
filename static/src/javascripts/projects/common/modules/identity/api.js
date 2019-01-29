@@ -10,6 +10,7 @@ import { mergeCalls } from 'common/modules/async-call-merger';
 import { getUrlVars } from 'lib/url';
 import fetch from 'lib/fetch-json';
 import qs from 'qs';
+import reqwest from 'reqwest';
 
 let userFromCookieCache = null;
 
@@ -22,6 +23,16 @@ let profileRoot = null;
 type PasswordCredential = {
     id: string,
     password: string,
+};
+
+export type SettableConsent = {
+    id: string,
+    consented: boolean,
+};
+
+export type Newsletter = {
+    id: string,
+    subscribed: boolean,
 };
 
 export type IdentityUser = {
@@ -73,6 +84,37 @@ export const getUserFromCookie = (): ?IdentityUser => {
     }
 
     return userFromCookieCache;
+};
+
+export const updateNewsletter = (newsletter: Newsletter): Promise<void> =>
+    reqwest({
+        url: `${config.get('page.idApiUrl')}/users/me/newsletters`,
+        method: 'PATCH',
+        type: 'json',
+        contentType: 'application/json',
+        withCredentials: true,
+        crossOrigin: true,
+        data: JSON.stringify(newsletter),
+    });
+
+export const buildNewsletterUpdatePayload = (
+    action: string = 'none',
+    newsletterId: string
+): Newsletter => {
+    const newsletter = {};
+    switch (action) {
+        case 'add':
+            newsletter.id = newsletterId;
+            newsletter.subscribed = true;
+            break;
+        case 'remove':
+            newsletter.id = newsletterId;
+            newsletter.subscribed = false;
+            break;
+        default:
+            throw new Error(`Undefined newsletter action type (${action})`);
+    }
+    return newsletter;
 };
 
 export const isUserLoggedIn = (): boolean => getUserFromCookie() !== null;
@@ -224,20 +266,48 @@ export const getAllConsents = () => {
     });
 };
 
-export const setConsent = (consentId: string, consented: boolean) => {
-    const url = `${idApiRoot || ''}/users/me/consents`;
+export const getAllNewsletters = () => {
+    const endpoint = '/newsletters';
+    const url = (idApiRoot || '') + endpoint;
     return fetch(url, {
         mode: 'cors',
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            id: consentId,
-            consented,
-        }),
-        credentials: 'include',
+        method: 'GET',
+        headers: { Accept: 'application/json' },
     });
 };
 
+export const getSubscribedNewsletters = () => {
+    const endpoint = '/users/me/newsletters';
+    const url = (idApiRoot || '') + endpoint;
+    return fetch(url, {
+        mode: 'cors',
+        method: 'GET',
+        headers: { Accept: 'application/json' },
+        credentials: 'include',
+    })
+        .then(json => {
+            if (json.result.subscriptions) {
+                return json.result.subscriptions.map(sub => sub.listId);
+            }
+            return [];
+        })
+        .catch(() => []);
+};
+
+export const setConsent = (consents: SettableConsent[]): Promise<void> =>
+    new Promise((success, error) => {
+        reqwest({
+            url: `${idApiRoot || ''}/users/me/consents`,
+            method: 'PATCH',
+            type: 'json',
+            contentType: 'application/json',
+            withCredentials: true,
+            crossOrigin: true,
+            data: JSON.stringify(consents),
+            error,
+            success,
+        });
+    });
 export const ajaxSignIn = (credentials: PasswordCredential) => {
     const url = `${profileRoot || ''}/actions/auth/ajax`;
     return fetch(url, {
@@ -251,3 +321,10 @@ export const ajaxSignIn = (credentials: PasswordCredential) => {
         credentials: 'include',
     });
 };
+
+export const getUserData = (): Promise<Response> =>
+    fetch(`${idApiRoot || ''}/user/me`, {
+        method: 'GET',
+        mode: 'cors',
+        credentials: 'include',
+    });

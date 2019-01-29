@@ -7,6 +7,7 @@ import com.gu.contentapi.client.model.ContentApiError
 import com.gu.contentapi.client.model.v1.ErrorResponse
 import conf.switches.Switch
 import conf.switches.Switches.InlineEmailStyles
+import _root_.html.{BrazeEmailFormatter, HtmlTextExtractor}
 import model.CacheTime.RecentlyUpdated
 import model.Cached.RevalidatableResult
 import model.{ApplicationContext, Cached, NoCache}
@@ -15,8 +16,10 @@ import play.api.Logger
 import play.api.libs.json.{JsObject, JsString}
 import play.api.mvc.{RequestHeader, Result}
 import play.twirl.api.Html
+import model.ApplicationContext
+import http.ResultWithPreload
 
-object `package` extends implicits.Strings with implicits.Requests with play.api.mvc.Results {
+object `package` extends implicits.Strings with implicits.Requests with play.api.mvc.Results with ResultWithPreload {
 
   def isCommercialExpiry(error: ErrorResponse): Boolean = {
     error.message == "The requested resource has expired for commercial reason."
@@ -33,35 +36,34 @@ object `package` extends implicits.Strings with implicits.Requests with play.api
                                            context: ApplicationContext,
                                            log: Logger): PartialFunction[Throwable, Result] = {
     case _: CircuitBreakerOpenException =>
-      log.error(s"Got a circuit breaker open error while calling content api")
+      log.error(s"Got a circuit breaker open error while calling content api, path: ${request.path}")
       NoCache(ServiceUnavailable)
     case ContentApiError(404, message, _) =>
-      log.info(s"Got a 404 while calling content api: $message")
+      log.info(s"Got a 404 while calling content api: $message, path:${request.path}")
       NoCache(NotFound)
     case ContentApiError(410, message, errorResponse) =>
       errorResponse match {
         case Some(errorResponse) if isCommercialExpiry(errorResponse) =>
-          log.info(s"Got a 410 while calling content api: $message: ${errorResponse.message}")
+          log.info(s"Got a 410 while calling content api: $message: ${errorResponse.message}, path: ${request.path}")
           Cached(60)(RevalidatableResult.Ok(views.html.commercialExpired()))
         case _ =>
-          log.info(s"Got a 410 while calling content api: $message")
+          log.info(s"Got a 410 while calling content api: $message, path: ${request.path}")
           NoCache(Gone)
       }
     case timeout: TimeoutException =>
-      log.info(s"Got a timeout while calling content api: ${timeout.getMessage}")
+      log.info(s"Got a timeout while calling content api: ${timeout.getMessage}, path: ${request.path}", timeout)
       NoCache(GatewayTimeout(timeout.getMessage))
     case error =>
-      log.info(s"Content api exception: ${error.getMessage}")
-      log.info(s"Content api stack trace: ${ExceptionUtils.getStackTrace(error)}")
-      Option(error.getCause).map { cause =>
-        log.info(s"Content api exception cause: ", cause)
+      log.info(s"Content api exception: ${error.getMessage}", error)
+      Option(error.getCause).foreach { cause =>
+        log.info(s"Content api exception cause (path: ${request.path}: ", cause)
       }
       NoCache(InternalServerError)
   }
 
   /*
     NOTE: The htmlResponse & jsonResponse are () => Html functions so that you do not do all the rendering twice.
-          Only the once you actually render is used
+          Only the one you actually render is used
    */
 
   def renderFormat(htmlResponse: () => Html, jsonResponse: () => Html, page: model.Page)(implicit request: RequestHeader): Result =
@@ -108,8 +110,10 @@ object `package` extends implicits.Strings with implicits.Requests with play.api
         RevalidatableResult.Ok(htmlResponse())
     }
 
-  def renderHtml(html: Html, page: model.Page)(implicit request: RequestHeader, context: ApplicationContext): Result = Cached(page){
-    RevalidatableResult.Ok(html)
+  def renderHtml(html: Html, page: model.Page)(implicit request: RequestHeader, context: ApplicationContext): Result = {
+    Cached(page)(RevalidatableResult.Ok(html)).withPreload(
+      Preload.config(request).getOrElse(context.applicationIdentity, Seq.empty)
+    )(context, request)
   }
 
   def renderJson(json: List[(String, Any)], page: model.Page)(implicit request: RequestHeader, context: ApplicationContext): Result = Cached(page){
@@ -120,10 +124,18 @@ object `package` extends implicits.Strings with implicits.Requests with play.api
     JsonComponent(page, json)
   }
 
+  def renderJson(json: String, page: model.Page)(implicit request: RequestHeader, context: ApplicationContext): Result = Cached(page) {
+    RevalidatableResult.Ok(json)
+  }
+
   def renderEmail(html: Html, page: model.Page)(implicit request: RequestHeader, context: ApplicationContext): Result = {
     val htmlWithInlineStyles = if (InlineEmailStyles.isSwitchedOn) InlineStyles(html) else html
     if (request.isEmailJson) {
-      Cached(RecentlyUpdated)(RevalidatableResult.Ok(JsObject(Map("body" -> JsString(htmlWithInlineStyles.toString)))))
+      val htmlWithUtmLinks = BrazeEmailFormatter(htmlWithInlineStyles)
+      Cached(RecentlyUpdated)(RevalidatableResult.Ok(JsObject(Map("body" -> JsString(htmlWithUtmLinks.toString)))))
+    } else if (request.isEmailTxt) {
+      val htmlWithUtmLinks = BrazeEmailFormatter(htmlWithInlineStyles)
+      Cached(RecentlyUpdated)(RevalidatableResult.Ok(JsObject(Map("body" -> JsString(HtmlTextExtractor(htmlWithUtmLinks))))))
     } else {
       Cached(page)(RevalidatableResult.Ok(htmlWithInlineStyles))
     }

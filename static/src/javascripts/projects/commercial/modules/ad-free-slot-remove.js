@@ -1,7 +1,7 @@
 // @flow
 import qwery from 'qwery';
 import fastdom from 'lib/fastdom-promise';
-import once from 'lodash/functions/once';
+import once from 'lodash/once';
 import { dfpEnv } from 'commercial/modules/dfp/dfp-env';
 import { commercialFeatures } from 'common/modules/commercial/commercial-features';
 
@@ -39,6 +39,10 @@ const adFreeSlotRemove = once(
             '.fc-container'
         ).filter(shouldRemoveFaciaContainerWhenAdFree);
 
+        const commercialThrashers: Array<Element> = qwery(
+            '.commercial-thrasher'
+        );
+
         return fastdom.write(() => {
             if (bodyEl) {
                 if (bodyEl.classList.toString().includes('has-page-skin')) {
@@ -57,6 +61,14 @@ const adFreeSlotRemove = once(
             commercialFaciaContainersToRemove.forEach(
                 (faciaContainer: Element) => faciaContainer.classList.add('u-h')
             );
+            commercialThrashers.forEach((thrasher: Element) => {
+                const closestFaciaContainer = thrasher.closest(
+                    '.fc-container--thrasher'
+                );
+                if (closestFaciaContainer) {
+                    closestFaciaContainer.remove();
+                }
+            });
         });
     }
 );

@@ -141,9 +141,10 @@ fast   | 1st    | small    | no          | small
 
 ## Writing CSS for email
 
-Only a **very limited subset** of CSS will work in certain email clients. See here for a guide: https://www.campaignmonitor.com/css/style-element/style-in-head/
+Only a **very limited subset** of CSS will work in certain email clients. See here for a guide: https://www.campaignmonitor.com/css
 
 Some key points:
 - Use `<tr>` for new rows rather than `<div>`, `<p>`, or anything else you might use if you've written HTML in the last decade
 - For spacing, use only padding on `<td>` elements. Margins don't work properly in Outlook.
 - For positioning items horizontally next to one another, wrap in `<td>` with percentage width
+- Do not wrap block-level elements in `<a>` elements as this will break in Outlook (see https://github.com/guardian/frontend/pull/15634).

@@ -13,13 +13,33 @@ trait JournalismSwitches {
     exposeClientSide = false
   )
 
-  val PodcastContainerSwitch = Switch(
+  val AudioOnwardJourneySwitch = Switch(
     SwitchGroup.Journalism,
-    "ab-podcast-container",
-    "Test designs for a /uk podcasts container",
+    "audio-onward-journey-switch",
+    "Display latest podcast episodes on audio pages",
     owners = Seq(Owner.withName("journalism team")),
     safeState = Off,
     sellByDate = never,
     exposeClientSide = true
+  )
+
+  val FlagshipEmailContainerSwitch = Switch(
+    SwitchGroup.Journalism,
+    "flagship-email-container",
+    "Display the Flagship podcast container in the daily emails",
+    owners = Seq(Owner.withName("journalism team")),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = false
+  )
+
+  val FlagshipFrontContainerSwitch = Switch(
+    SwitchGroup.Journalism,
+    "flagship-front-container",
+    "Display the Flagship podcast container on the /uk front",
+    owners = Seq(Owner.withName("journalism team")),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = false
   )
 }

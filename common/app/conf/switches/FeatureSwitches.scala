@@ -2,8 +2,31 @@ package conf.switches
 
 import conf.switches.Expiry.never
 import org.joda.time.LocalDate
+import conf.switches.Owner.group
+import conf.switches.SwitchGroup.Commercial
 
 trait FeatureSwitches {
+
+  val DotcomRendering = Switch(
+    SwitchGroup.Feature,
+    "dotcom-rendering",
+    "If this switch is on, we will use the dotcom rendering tier for articles which are supported by it",
+    owners = Seq(Owner.withGithub("MatthewJWalls")),
+    safeState = On,
+    sellByDate = never,
+    exposeClientSide = false
+  )
+
+  val DotcomRenderingAMP = Switch(
+    SwitchGroup.Feature,
+    "dotcom-rendering-amp",
+    "If this switch is on, we will use the dotcom rendering tier for AMP articles which are supported by it",
+    owners = Seq(Owner.withGithub("nicl")),
+    safeState = On,
+    sellByDate = never,
+    exposeClientSide = false
+  )
+
   val ShareCounts = Switch(
     SwitchGroup.Feature,
     "server-share-counts",
@@ -69,6 +92,26 @@ trait FeatureSwitches {
     "geo-most-popular",
     "If this is switched on users then 'most popular' will be upgraded to geo targeted",
     owners = Seq(Owner.withGithub("johnduffell")),
+    safeState = On,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
+  val ExtendedMostPopular = Switch(
+    SwitchGroup.Feature,
+    "extended-most-popular",
+    "Extended 'Most Popular' component with space for DPMUs",
+    owners = group(Commercial),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
+  val MostViewedFronts = Switch(
+    SwitchGroup.Feature,
+    "most-viewed-fronts",
+    "If this is switched off, most viewed will not show on fronts",
+    owners = Seq(Owner.withName("dotcom platform")),
     safeState = On,
     sellByDate = never,
     exposeClientSide = true
@@ -161,7 +204,7 @@ trait FeatureSwitches {
     "If this is switched on then videos are enhanced using VideoJS",
     owners = Seq(Owner.withGithub("siadcock")),
     safeState = On,
-    sellByDate = new LocalDate(2018, 9, 28),
+    sellByDate = new LocalDate(2019, 1, 29),
     exposeClientSide = true
   )
 
@@ -433,35 +476,14 @@ trait FeatureSwitches {
     exposeClientSide = false
   )
 
-  val YouTubePosterOverride = Switch(
-    SwitchGroup.Feature,
-    "youtube-poster-override",
-    "When ON show trail image on YouTube atom playable content cards instead of the poster image",
-    owners = Seq(Owner.withGithub("gidsg")),
-    safeState = Off,
-    sellByDate = never,
-    exposeClientSide = false
-  )
-
   val YouTubeRelatedVideos = Switch(
     SwitchGroup.Feature,
     "youtube-related-videos",
     "When ON show YouTube related video suggestions in YouTube media atoms",
     owners = Seq(Owner.withGithub("siadcock")),
     safeState = Off,
-    sellByDate = new LocalDate(2018, 10, 2),
+    sellByDate = new LocalDate(2019, 3, 7),
     exposeClientSide = true
-  )
-
-  // Owner: Journalism
-  val ReaderAnswersDeliveryMechanism = Switch(
-    SwitchGroup.Feature,
-    "reader-answers-preferred-delivery-mechanism",
-    "When ON, story questions will give readers the option to indicate their preferred answer delivery medium",
-    owners = Seq(Owner.withGithub("annebyrne")),
-    safeState = On,
-    sellByDate = new LocalDate(2018, 10, 24),
-    exposeClientSide = false
   )
 
   val WeAreHiring = Switch(
@@ -482,5 +504,26 @@ trait FeatureSwitches {
     safeState = On,
     sellByDate = never,
     exposeClientSide = false
+  )
+
+  // Simple & Coherent
+  val ScAdFreeBanner = Switch(
+    SwitchGroup.Feature,
+    "sc-ad-free-banner",
+    "If switched on, ad free users will be told they have ad free.",
+    owners = Seq(Owner.withName("simple.and.coherent")),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
+  val SubscribeWithGoogle = Switch(
+    SwitchGroup.Feature,
+    "subscribe-with-google",
+    "If switched on, a Subscribe with Google button will appear on AMP articles.",
+    owners = Seq(Owner.withName("adem.gaygusuz")),
+    safeState = Off,
+    sellByDate = new LocalDate(2019, 3, 20),
+    exposeClientSide = true
   )
 }

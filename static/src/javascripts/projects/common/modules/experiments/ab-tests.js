@@ -1,34 +1,38 @@
 // @flow
-import { isExpired } from 'common/modules/experiments/test-can-run-checks';
-import { removeParticipation } from 'common/modules/experiments/utils';
-import { getTest as getAcquisitionTest } from 'common/modules/experiments/acquisition-test-selector';
-import { commercialPrebidAdYouLike } from 'common/modules/experiments/tests/commercial-prebid-adyoulike.js';
 import { commercialPrebidSafeframe } from 'common/modules/experiments/tests/commercial-prebid-safeframe.js';
 import { commercialAdVerification } from 'common/modules/experiments/tests/commercial-ad-verification.js';
-import { PodcastContainer } from 'common/modules/experiments/tests/podcast-container';
+import { commercialCmpCustomise } from 'common/modules/experiments/tests/commercial-cmp-customise.js';
+import { commercialOutbrainNewids } from 'common/modules/experiments/tests/commercial-outbrain-newids.js';
+import { askFourEarning } from 'common/modules/experiments/tests/contributions-epic-ask-four-earning';
+import { acquisitionsEpicAlwaysAskIfTagged } from 'common/modules/experiments/tests/acquisitions-epic-always-ask-if-tagged';
+import { acquisitionsEpicLiveblog } from 'common/modules/experiments/tests/acquisitions-epic-liveblog';
+import { acquisitionsEpicThankYou } from 'common/modules/experiments/tests/acquisitions-epic-thank-you';
+import {
+    AcquisitionsBannerGoogleDocTestFiveVariants,
+    AcquisitionsBannerGoogleDocTestFourVariants,
+    AcquisitionsBannerGoogleDocTestOneVariant,
+    AcquisitionsBannerGoogleDocTestThreeVariants,
+    AcquisitionsBannerGoogleDocTestTwoVariants,
+} from 'common/modules/experiments/tests/acquisitions-banner-from-google-doc';
 
-export const TESTS: $ReadOnlyArray<ABTest> = [
-    getAcquisitionTest(),
+export const concurrentTests: $ReadOnlyArray<ABTest> = [
     commercialPrebidSafeframe,
-    commercialPrebidAdYouLike,
     commercialAdVerification,
-    PodcastContainer,
-].filter(Boolean);
+    commercialCmpCustomise,
+    commercialOutbrainNewids,
+];
 
-export const getActiveTests = (): $ReadOnlyArray<ABTest> =>
-    TESTS.filter(test => {
-        if (isExpired(test.expiry)) {
-            removeParticipation(test);
-            return false;
-        }
-        return true;
-    });
+export const epicTests: $ReadOnlyArray<EpicABTest> = [
+    askFourEarning,
+    acquisitionsEpicAlwaysAskIfTagged,
+    acquisitionsEpicLiveblog,
+    acquisitionsEpicThankYou,
+];
 
-export const getExpiredTests = (): $ReadOnlyArray<ABTest> =>
-    TESTS.filter(test => isExpired(test.expiry));
-
-export const getTest = (id: string): ?ABTest => {
-    const testIds = TESTS.map(test => test.id);
-    const index = testIds.indexOf(id);
-    return index > -1 ? TESTS[index] : null;
-};
+export const engagementBannerTests: $ReadOnlyArray<AcquisitionsABTest> = [
+    AcquisitionsBannerGoogleDocTestOneVariant,
+    AcquisitionsBannerGoogleDocTestTwoVariants,
+    AcquisitionsBannerGoogleDocTestThreeVariants,
+    AcquisitionsBannerGoogleDocTestFourVariants,
+    AcquisitionsBannerGoogleDocTestFiveVariants,
+];

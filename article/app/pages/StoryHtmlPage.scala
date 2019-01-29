@@ -14,7 +14,8 @@ import views.html.fragments.page._
 import views.html.fragments.page.body._
 import views.html.fragments.page.head.stylesheets.{criticalStyleInline, criticalStyleLink, styles}
 import views.html.fragments.page.head._
-import html.HtmlPageHelpers.ContentCSSFile
+import html.HtmlPageHelpers.{ContentCSSFile}
+import views.html.stacked
 
 object StoryHtmlPage {
 
@@ -43,7 +44,6 @@ object StoryHtmlPage {
       headTag(
         weAreHiring() when WeAreHiring.isSwitchedOn,
         orielScriptTag(),
-        lotameScriptTag() when LotameSwitch.isSwitchedOn,
         titleTag(),
         metaData(),
         head,

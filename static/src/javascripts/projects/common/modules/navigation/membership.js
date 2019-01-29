@@ -10,14 +10,25 @@ import config from 'lib/config';
 import bean from 'bean';
 import arrowRight from 'svgs/icon/arrow-right.svg';
 import type { Banner } from 'common/modules/ui/bannerPicker';
+import { isUserLoggedIn } from 'common/modules/identity/api';
 import userPrefs from 'common/modules/user-prefs';
 
-const accountDataUpdateLink = accountDataUpdateWarningLink =>
-    `${config.get('page.idUrl')}/${
-        accountDataUpdateWarningLink === 'contribution'
-            ? 'contribution/recurring/edit'
-            : `${accountDataUpdateWarningLink}/edit`
-    }`;
+const createManageBannerLink = manageProductKeyword =>
+    `${config.get('page.mmaUrl')}/banner/${manageProductKeyword}?INTCMP=BANNER`;
+
+const accountDataUpdateLink = accountDataUpdateWarningLink => {
+    switch (accountDataUpdateWarningLink) {
+        case 'contribution':
+            return createManageBannerLink('contributions');
+        case 'membership':
+        case 'digitalpack':
+            return createManageBannerLink(accountDataUpdateWarningLink);
+        default:
+            return `${config.get(
+                'page.idUrl'
+            )}/${accountDataUpdateWarningLink}/edit`;
+    }
+};
 
 const messageCode: string = 'membership-action-required';
 
@@ -33,59 +44,75 @@ const storeBannerCanBeLoadedAgainAfter = () => {
     );
 };
 
+const gaTrackMMA = (category, action) => label => {
+    window.ga(
+        `${config.get('googleAnalytics.trackers.editorial')}.send`,
+        'event',
+        category,
+        action,
+        label
+    );
+};
+
+const updateLink = accountDataUpdateWarning();
+
 const showAccountDataUpdateWarningMessage = accountDataUpdateWarningLink => {
-    const gaTracker = config.get('googleAnalytics.trackers.editorial');
     const newMessage = new Message(messageCode, {
         cssModifierClass: messageCode,
         trackDisplay: true,
         siteMessageLinkName: messageCode,
         siteMessageComponentName: messageCode,
         customJs: () => {
+            const gaTrackClickMMA = gaTrackMMA('click', 'in page');
+            const gaTrackElementViewMMA = gaTrackMMA(
+                'element view',
+                'internal'
+            );
+
             bean.on(document, 'click', '.js-site-message-close', () => {
-                window.ga(
-                    `${gaTracker}.send`,
-                    'event',
-                    'click',
-                    'in page',
-                    'membership action required | banner hidden'
+                gaTrackClickMMA('membership action required | banner hidden');
+                gaTrackClickMMA(
+                    `mma action required | banner hidden | ${updateLink || '?'}`
                 );
                 storeBannerCanBeLoadedAgainAfter();
             });
 
             bean.on(document, 'click', '.js-mma-update-details-button', () => {
-                window.ga(
-                    `${gaTracker}.send`,
-                    'event',
-                    'click',
-                    'in page',
+                gaTrackClickMMA(
                     'membership action required | banner update details clicked'
+                );
+                gaTrackClickMMA(
+                    `mma action required | banner update details clicked | ${updateLink ||
+                        '?'}`
                 );
                 storeBannerCanBeLoadedAgainAfter();
             });
 
-            window.ga(
-                `${gaTracker}.send`,
-                'event',
-                'element view',
-                'internal',
+            gaTrackElementViewMMA(
                 'membership action required | banner impression'
+            );
+            gaTrackElementViewMMA(
+                `mma action required | banner impression | ${updateLink || '?'}`
             );
         },
     });
 
     newMessage.show(
-        `<span class="site-message__copy-text">
-            An action is needed on your Guardian account. 
-            Please review and update your details as soon as you can. Thank you.
-        </span>
-        <a class="button site-message__copy-button js-mma-update-details-button" href="${accountDataUpdateLink(
-            accountDataUpdateWarningLink
-        )}">
-            Update details ${arrowRight.markup}
-        </a>`
+        `<div class="site-message__copy-heading">
+            Action is needed on your Guardian account
+        </div>
+        <div class="site-message__copy-text">
+            Please review and update your details as&nbsp;soon&nbsp;as&nbsp;you&nbsp;can. Thank&nbsp;you.
+        </div>
+        <div class="site-message__copy-text">
+            <a class="button site-message__copy-button js-mma-update-details-button" href="${accountDataUpdateLink(
+                accountDataUpdateWarningLink
+            )}">
+                Update details ${arrowRight.markup}
+            </a>
+        </div>`
     );
 };
-const updateLink = accountDataUpdateWarning();
 
 const canShow: () => Promise<boolean> = () => {
     const bannerCanBeLoadedAgainAfter = userPrefs.get(
@@ -93,6 +120,7 @@ const canShow: () => Promise<boolean> = () => {
     );
     return Promise.resolve(
         updateLink !== null &&
+            isUserLoggedIn() &&
             !(
                 bannerCanBeLoadedAgainAfter &&
                 new Date(bannerCanBeLoadedAgainAfter) > new Date()

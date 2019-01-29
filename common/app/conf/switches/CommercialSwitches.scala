@@ -47,23 +47,13 @@ trait CommercialSwitches {
     exposeClientSide = true
   )
 
-  val BlockIASSwitch = Switch(
+  val HostedVideoAutoplay = Switch(
     Commercial,
-    "block-ias",
-    "Controls whether the Service Worker can filter out IAS calls",
-    owners = Seq(Owner.withGithub("regiskuckaertz")),
+    "hosted-video-autoplay",
+    "When ON, hosted video content may be allowed to autoplay",
+    owners = Seq(Owner.withGithub("katebee")),
     safeState = Off,
     sellByDate = never,
-    exposeClientSide = true
-  )
-
-  val AdFreeEmergencyShutdown = Switch(
-    Commercial,
-    "ad-free-emergency-shutdown",
-    "When ON, we kill the ad-free service immediately. This is a temporary switch for live-testing.",
-    owners = Seq(Owner.withGithub("JustinPinner")),
-    safeState = Off,
-    sellByDate = new LocalDate(2018, 9, 18),
     exposeClientSide = true
   )
 
@@ -91,6 +81,16 @@ trait CommercialSwitches {
     Commercial,
     "imr-worldwide",
     "Enable the IMR Worldwide audience segment tracking.",
+    owners = group(Commercial),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
+    val InizioSwitch = Switch(
+    Commercial,
+    "inizio",
+    "Include the Inizio script on page so that creatives can show a survey.",
     owners = group(Commercial),
     safeState = Off,
     sellByDate = never,
@@ -237,6 +237,17 @@ trait CommercialSwitches {
     exposeClientSide = true
   )
 
+
+  val EpicTestsFromGoogleDocs = Switch(
+    Commercial,
+    "epic-tests-from-google-docs",
+    "Fetches epic tests from Google Docs. These take priority over hardcoded epic tests.",
+    owners = Seq(Owner.withGithub("joelochlann")),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
   val MembershipEngagementBannerBlockUK = Switch(
     Commercial,
     "membership-engagement-banner-block-uk",
@@ -277,23 +288,13 @@ trait CommercialSwitches {
     exposeClientSide = true
   )
 
-  val sonobiSwitch: Switch = Switch(
-    group = Commercial,
-    name = "sonobi-header-bidding",
-    description = "Turn on Sonobi header bidding",
-    owners = Owner.group(SwitchGroup.Commercial),
-    safeState = Off,
-    sellByDate = never,
-    exposeClientSide = false
-  )
-
   val OrielAnalyticsSwitch: Switch = Switch(
     group = Commercial,
     name = "oriel-analytics-or-full",
     description = "Turn on to include the analytics ONLY for Oriel. Turn off to include the FULL integration script. Depends on AB test switch.",
     owners = group(Commercial),
     safeState = On,
-    sellByDate = new LocalDate(2018, 9, 12),
+    sellByDate = new LocalDate(2019, 2, 7),
     exposeClientSide = false
   )
 
@@ -303,7 +304,7 @@ trait CommercialSwitches {
     description = "Include the blockthrough script for testing the vendors effectiveness at circumventing ad-blocking.",
     owners = group(Commercial),
     safeState = Off,
-    sellByDate = new LocalDate(2018, 9, 27),
+    sellByDate = new LocalDate(2019, 2, 7),
     exposeClientSide = false
    )
 
@@ -380,6 +381,26 @@ trait PrebidSwitches {
     exposeClientSide = true
   )
 
+  val ampPrebid: Switch = Switch(
+    group = CommercialPrebid,
+    name = "amp-prebid",
+    description = "Amp inventory is being auctioned through Prebid",
+    owners = group(Commercial),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = false
+  )
+
+  val prebidUserSync: Switch = Switch(
+    group = CommercialPrebid,
+    name = "prebid-user-sync",
+    description = "Enable bidders to sync their user data with iframe or image beacons",
+    owners = group(Commercial),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
   val prebidSonobi: Switch = Switch(
     group = CommercialPrebid,
     name = "prebid-sonobi",
@@ -400,6 +421,26 @@ trait PrebidSwitches {
     exposeClientSide = true
   )
 
+  val prebidAppNexusUKROW: Switch = Switch(
+    group = CommercialPrebid,
+    name = "prebid-appnexus-uk-row",
+    description = "Include AppNexus adapter in Prebid auctions in UK/ROW",
+    owners = group(Commercial),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
+  val prebidAppNexusInvcode: Switch = Switch(
+    group = CommercialPrebid,
+    name = "prebid-appnexus-invcode",
+    description = "Swap placementId for invCode in the bid params",
+    owners = group(Commercial),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
   val prebidIndexExchange: Switch = Switch(
     group = CommercialPrebid,
     name = "prebid-index-exchange",
@@ -410,10 +451,20 @@ trait PrebidSwitches {
     exposeClientSide = true
   )
 
-    val prebidOpenx: Switch = Switch(
-    group = Commercial,
+  val prebidOpenx: Switch = Switch(
+    group = CommercialPrebid,
     name = "prebid-openx",
     description = "Include OpenX adapter in Prebid auctions",
+    owners = group(Commercial),
+    safeState = Off,
+    sellByDate = never,
+    exposeClientSide = true
+  )
+
+  val prebidPubmatic: Switch = Switch(
+    group = CommercialPrebid,
+    name = "prebid-pubmatic",
+    description = "Include Pubmatic adapter in Prebid auctions",
     owners = group(Commercial),
     safeState = Off,
     sellByDate = never,

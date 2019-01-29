@@ -8,11 +8,31 @@ trait ABTestSwitches {
 
   Switch(
     ABTests,
+    "ab-commercial-cmp-customise",
+    "change the location and format of your CMP data",
+    owners = Seq(Owner.withGithub("katebee")),
+    safeState = Off,
+    sellByDate = new LocalDate(2019, 9, 30),
+    exposeClientSide = true
+  )
+
+  Switch(
+    ABTests,
+    "ab-commercial-outbrain-newids",
+    "Enable the outbrain new IDs (Jan 2019) AB Test",
+    owners = Seq(Owner.withGithub("jeteve")),
+    safeState = Off,
+    sellByDate = new LocalDate(2019, 6, 3),
+    exposeClientSide = true
+  )
+
+  Switch(
+    ABTests,
     "ab-contributions-epic-ask-four-earning",
     "This places the epic on all articles for all users, with a limit of 4 impressions in any given 30 days",
     owners = Seq(Owner.withGithub("jranks123")),
     safeState = Off,
-    sellByDate = new LocalDate(2019, 1, 24),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
@@ -22,7 +42,7 @@ trait ABTestSwitches {
     "This places the epic below those blocks on liveblogs which have been marked for displaying the epic in Composer",
     owners = Seq(Owner.withGithub("joelochlann")),
     safeState = Off,
-    sellByDate = new LocalDate(2019, 1, 24),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
@@ -32,7 +52,7 @@ trait ABTestSwitches {
     "This guarantees that any on any article that is tagged with a tag that is on the allowed list of tags as set by the tagging tool, the epic will be displayed",
     owners = Seq(Owner.withGithub("jranks123")),
     safeState = On,
-    sellByDate = new LocalDate(2019, 1, 24),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
@@ -42,77 +62,7 @@ trait ABTestSwitches {
     "Bootstrap the AB test framework to use the Epic to thank readers who have already supported the Guardian",
     owners = Seq(Owner.withGithub("Mullefa")),
     safeState = On,
-    sellByDate = new LocalDate(2019, 1, 24),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
-    "ab-acquisitions-us-gun-campaign-2017",
-    "Show a custom Epic for articles with the US gun campaign tag",
-    owners = Seq(Owner.withGithub("Mullefa")),
-    safeState = On,
-    sellByDate = new LocalDate(2019, 3, 14),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
-    "ab-acquisitions-australia-environment-campaign-2018",
-    "Show a custom Epic for articles with the Australia environment campaign tag",
-    owners = Seq(Owner.withGithub("joelochlann")),
-    safeState = Off,
-    sellByDate = new LocalDate(2019, 3, 14),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
-    "ab-acquisitions-epic-from-google-doc-one-variant",
-    "Serves an epic with copy from a Google Doc",
-    owners = Seq(Owner.withGithub("joelochlann")),
-    safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 5),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
-    "ab-acquisitions-epic-from-google-doc-two-variants",
-    "Serves an epic with copy from a Google Doc",
-    owners = Seq(Owner.withGithub("joelochlann")),
-    safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 5),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
-    "ab-acquisitions-epic-from-google-doc-three-variants",
-    "Serves an epic with copy from a Google Doc",
-    owners = Seq(Owner.withGithub("joelochlann")),
-    safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 5),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
-    "ab-acquisitions-epic-from-google-doc-four-variants",
-    "Serves an epic with copy from a Google Doc",
-    owners = Seq(Owner.withGithub("joelochlann")),
-    safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 5),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
-    "ab-acquisitions-epic-from-google-doc-five-variants",
-    "Serves an epic with copy from a Google Doc",
-    owners = Seq(Owner.withGithub("joelochlann")),
-    safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 5),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
@@ -128,16 +78,6 @@ trait ABTestSwitches {
 
   Switch(
     ABTests,
-    "ab-commercial-prebid-ad-you-like",
-    "Test the rendering of Prebid ads served by AdYouLike",
-    owners = Owner.group(Commercial),
-    safeState = Off,
-    sellByDate = new LocalDate(2018, 9, 26),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
     "ab-commercial-ad-verification",
     "Test the impact of verifiyng ads",
     owners = Seq(Owner.withGithub("jeteve")),
@@ -148,21 +88,11 @@ trait ABTestSwitches {
 
   Switch(
     ABTests,
-    "ab-acquisitions-epic-iframe-test-v2",
-    "Test displaying the Epic inside an iframe (with no Google javascript running)",
-    owners = Seq(Owner.withGithub("joelochlann")),
-    safeState = Off,
-    sellByDate = new LocalDate(2019, 7, 31),
-    exposeClientSide = true
-  )
-
-  Switch(
-    ABTests,
     "ab-acquisitions-banner-from-google-doc-one-variant",
     "serves an banner with copy from a google doc",
     owners = Seq(Owner.withGithub("tsop14")),
     safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 6),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
@@ -172,7 +102,7 @@ trait ABTestSwitches {
     "Serves an banner with copy from a Google Doc",
     owners = Seq(Owner.withGithub("tsop14")),
     safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 6),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
@@ -182,7 +112,7 @@ trait ABTestSwitches {
     "Serves an banner with copy from a Google Doc",
     owners = Seq(Owner.withGithub("tsop14")),
     safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 6),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
@@ -192,7 +122,7 @@ trait ABTestSwitches {
     "Serves an banner with copy from a Google Doc",
     owners = Seq(Owner.withGithub("tsop14")),
     safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 6),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
@@ -202,17 +132,8 @@ trait ABTestSwitches {
     "Serves an banner with copy from a Google Doc",
     owners = Seq(Owner.withGithub("tsop14")),
     safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 6),
+    sellByDate = new LocalDate(2020, 1, 27),
     exposeClientSide = true
   )
 
-  Switch(
-    ABTests,
-    "ab-acquisitions-epic-google-doc-vs-hardcoded",
-    "Tests an epic which gets its copy from a Google Doc against one whose copy is hardcoded",
-    owners = Seq(Owner.withGithub("joelochlann")),
-    safeState = Off,
-    sellByDate = new LocalDate(2019, 6, 6),
-    exposeClientSide = true
-  )
 }

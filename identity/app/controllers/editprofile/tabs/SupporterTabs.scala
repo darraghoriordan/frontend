@@ -1,5 +1,6 @@
 package controllers.editprofile.tabs
 
+import conf.Configuration
 import controllers.editprofile._
 import play.api.mvc.{Action, AnyContent}
 
@@ -10,13 +11,19 @@ trait SupporterTabs
     extends EditProfileControllerComponents
     with EditProfileFormHandling {
 
-  /** GET /membership/edit */
-  def displayMembershipForm: Action[AnyContent] = displayForm(MembershipEditProfilePage)
+  private def redirectToManage(path: String): Action[AnyContent] = Action { implicit request =>
+    Redirect(
+      url = s"${Configuration.id.mmaUrl}/${path}",
+      MOVED_PERMANENTLY)
+  }
 
-  /** GET /contribution/recurring/edit */
-  def displayRecurringContributionForm: Action[AnyContent] = displayForm(recurringContributionPage)
+  /** Redirect /membership/edit to manage.theguardian.com/membership */
+  def redirectToManageMembership: Action[AnyContent] = redirectToManage("membership")
 
-  /** GET /digitalpack/edit */
-  def displayDigitalPackForm: Action[AnyContent] = displayForm(DigiPackEditProfilePage)
+  /** Redirect /contribution/recurring/edit to manage.theguardian.com/contributions */
+  def redirectToManageContributions: Action[AnyContent] = redirectToManage("contributions")
+
+  /** Redirect /digitalpack/edit to manage.theguardian.com/digitalpack */
+  def redirectToManageDigitalPack: Action[AnyContent] = redirectToManage("digitalpack")
 
 }

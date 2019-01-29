@@ -5,28 +5,22 @@ import {
     React,
     render,
 } from '@guardian/dotcom-rendering/packages/guui';
-import Player from './AudioPlayer';
-import { sendToOphan } from './utils';
+import { AudioPlayer } from './AudioPlayer';
+import { sendToOphan, registerOphanListeners } from './utils';
 
 type Props = {
     source: string,
     mediaId: string,
-    downloadUrl: string,
-    iTunesUrl: string,
-    pillar: string,
+    duration: string,
 };
 
 class AudioContainer extends Component<Props, *> {
     render() {
         return (
-            <Player
+            <AudioPlayer
                 sourceUrl={this.props.source}
                 mediaId={this.props.mediaId}
-                downloadUrl={this.props.downloadUrl}
-                iTunesUrl={this.props.iTunesUrl}
-                barWidth={2}
-                controls="controls"
-                pillar={this.props.pillar}
+                duration={this.props.duration}
             />
         );
     }
@@ -52,11 +46,9 @@ const init = (): void => {
         const source = placeholder.dataset.source;
         const mediaId = placeholder.dataset.mediaId;
         const downloadUrl = placeholder.dataset.downloadUrl;
-        const iTunesUrl = placeholder.dataset.itunesUrl;
+        const duration = placeholder.dataset.duration;
 
-        if (supportsCSSGrid) {
-            sendToOphan(mediaId, 'ready');
-        }
+        sendToOphan(mediaId, 'ready');
 
         const pillarClassName = Array.from(article.classList).filter(x =>
             x.includes('pillar')
@@ -69,11 +61,17 @@ const init = (): void => {
                     source={source}
                     mediaId={mediaId}
                     downloadUrl={downloadUrl}
-                    iTunesUrl={iTunesUrl}
+                    duration={duration}
                     pillar={pillar}
                 />
             ) : (
-                <audio src={source} controls mediaId={mediaId}>
+                <audio
+                    src={source}
+                    controls
+                    data-media-id={mediaId}
+                    ref={el => {
+                        if (el) registerOphanListeners(el);
+                    }}>
                     <track
                         src={source}
                         kind="captions"

@@ -1,4 +1,4 @@
-// @flow
+// @flow strict
 import config from 'lib/config';
 import { isBreakpoint } from 'lib/detect';
 import fastdom from 'lib/fastdom-promise';
@@ -146,8 +146,8 @@ const addMobileInlineAds = (): Promise<number> => {
     const rules = {
         bodySelector: '.js-article__body',
         slotSelector: ' > p',
-        minAbove: 300,
-        minBelow: 300,
+        minAbove: 200,
+        minBelow: 200,
         selectors: {
             ' > h2': {
                 minAbove: 100,
@@ -156,8 +156,9 @@ const addMobileInlineAds = (): Promise<number> => {
             ' .ad-slot': adSlotClassSelectorSizes,
             ' > :not(p):not(h2):not(.ad-slot)': {
                 minAbove: 35,
-                minBelow: 400,
+                minBelow: 200,
             },
+            fromBottom: true,
         },
         filter: filterNearbyCandidates(adSizes.mpu.height),
     };
@@ -239,11 +240,11 @@ const attemptToAddInlineMerchAd = (): Promise<boolean> => {
     );
 };
 
-export const init = (start: () => void, stop: () => void): Promise<any> => {
+export const init = (start: () => void, stop: () => void): Promise<boolean> => {
     start();
     if (!commercialFeatures.articleBodyAdverts) {
         stop();
-        return Promise.resolve();
+        return Promise.resolve(false);
     }
 
     const im = config.page.hasInlineMerchandise

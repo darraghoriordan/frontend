@@ -153,6 +153,7 @@
     .campaign--kicker {
         display: flex;
         flex-direction: row;
+        min-height: 70px;
 
         > .campaign--snippet__heading-logo {
             flex: initial;
@@ -421,6 +422,10 @@
         line-height: 20px;
         font-weight: 500;
         font-family: $f-serif-headline;
+
+        &.required::after {
+            content: '*';
+        }
 
         span {
             font-weight: 200;

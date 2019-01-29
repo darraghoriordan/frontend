@@ -12,7 +12,7 @@ import {
     decodeCookieValue,
 } from 'commercial/modules/cmp/cookieutils';
 
-import type { VendorConsentData, Range, VendorList } from './types';
+import type { VendorConsentData, Range, ShortVendorList } from './types';
 
 const encodeVendorCookieValue = (data: VendorConsentData): ?string => {
     if (data && data.cookieVersion) {
@@ -38,14 +38,10 @@ const encodeVendorIdsToBits = (
 };
 
 const encodePurposeIdsToBits = (
-    purposes: Array<{ id: number, name: string }>,
+    purposeIDs: Array<number>,
     selectedPurposeIds: Array<number>
 ): string => {
-    const maxPurposeId = Math.max(
-        0,
-        ...purposes.map(({ id }) => id),
-        ...selectedPurposeIds
-    );
+    const maxPurposeId = Math.max(0, ...purposeIDs, ...selectedPurposeIds);
     let purposeString = '';
     for (let id = 1; id <= maxPurposeId; id += 1) {
         purposeString += selectedPurposeIds.includes(id) ? '1' : '0';
@@ -91,7 +87,7 @@ const convertVendorsToRanges = (
 
 const encodeVendorConsentData = (
     data: VendorConsentData,
-    vendorList?: VendorList
+    shortVendorList?: ShortVendorList
 ): string => {
     const {
         selectedPurposeIds = [],
@@ -99,14 +95,14 @@ const encodeVendorConsentData = (
         maxVendorId,
     } = data;
 
-    const purposes = vendorList ? vendorList.purposes : [];
+    const purposeIDs = shortVendorList ? shortVendorList.purposeIDs : [];
 
     // Encode the data with and without ranges and return the smallest encoded payload
     const noRangesData: ?string = encodeVendorCookieValue({
         ...data,
         maxVendorId,
         purposeIdBitString: encodePurposeIdsToBits(
-            purposes,
+            purposeIDs,
             selectedPurposeIds
         ),
         isRange: false,
@@ -125,7 +121,7 @@ const encodeVendorConsentData = (
         ...data,
         maxVendorId,
         purposeIdBitString: encodePurposeIdsToBits(
-            purposes,
+            purposeIDs,
             selectedPurposeIds
         ),
         isRange: true,
@@ -204,14 +200,14 @@ const decodeVendorConsentData = (cookieValue: string): VendorConsentData => {
     return cookieData;
 };
 
-const readVendorConsentCookie = (): Promise<VendorConsentData | false> => {
+const readVendorConsentCookie = (): VendorConsentData | false => {
     const cookieVal: ?string = getCookie(VENDOR_CONSENT_COOKIE_NAME);
     if (cookieVal) {
-        log.debug(`Read consent data from cookie: ${cookieVal}`);
-        return Promise.resolve(decodeVendorConsentData(cookieVal));
+        log.info(`Read consent data from cookie: ${cookieVal}`);
+        return decodeVendorConsentData(cookieVal);
     }
-    log.warn('Unable to read from CMP cookie');
-    return Promise.resolve(false);
+    log.info('Unable to read from CMP cookie');
+    return false;
 };
 
 const writeVendorConsentCookie = (

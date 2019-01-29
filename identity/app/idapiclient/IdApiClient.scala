@@ -135,7 +135,8 @@ class IdApiClient(
 
   def setPasswordGuest(password: String, token: String): Future[Response[CookiesResponse]] = {
     val body: JObject = "password" -> password
-    put("guest/password", None, None, Some(compactRender(body)), List("X-Guest-Registration-Token" -> token, "Content-Type" -> "application/json"), List("validate-email" -> "0")).map(extract(jsonField("cookies")))
+    put("guest/password", None, None, Some(compactRender(body)), List("X-Guest-Registration-Token" -> token, "Content-Type" -> "application/json", "X-GU-ID-Client-Access-Token" -> conf.apiClientToken), List("validate-email" -> "0")).map(extract(jsonField
+    ("cookies")))
   }
 
   def resendEmailValidationEmail(auth: Auth, trackingParameters: TrackingData, returnUrlOpt: Option[String]): Future[Response[Unit]] = {
@@ -151,9 +152,6 @@ class IdApiClient(
 
   def deleteTelephone(auth: Auth): Future[Response[Unit]] =
     delete("user/me/telephoneNumber", Some(auth)) map extractUnit
-
-  def unsubscribeFromAllEmailsAndOptoutMarketingConsents(auth: Auth): Future[Response[Unit]] =
-    post("remove/consent/all", Some(auth)).map(extractUnit)
 
   // THIRD PARTY SIGN-IN
   def executeAccountDeletionStepFunction(userId: String, email: String, reason: Option[String], auth: Auth): Future[Response[AccountDeletionResult]] = {

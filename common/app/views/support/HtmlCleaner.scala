@@ -304,7 +304,6 @@ class TweetCleaner(content: Content, amp: Boolean) extends HtmlCleaner {
             element.empty()
             element.tagName("amp-twitter")
             element.attr("data-tweetId", elem.id)
-            element.attr("data-cards", "hidden")
             element.attr("layout", "responsive")
             element.attr("width", "486")
             element.attr("data-conversation","none")
@@ -664,7 +663,13 @@ object MembershipEventCleaner extends HtmlCleaner {
     }
 }
 
-case class AtomsCleaner(atoms: Option[Atoms], shouldFence: Boolean = true, amp: Boolean = false, mediaWrapper: Option[MediaWrapper] = None)(implicit val request: RequestHeader, context: ApplicationContext) extends HtmlCleaner {
+case class AtomsCleaner(
+  atoms: Option[Atoms],
+  shouldFence: Boolean = true,
+  amp: Boolean = false,
+  mediaWrapper: Option[MediaWrapper] = None,
+  posterImageOverride: Option[ImageMedia] = None
+)(implicit val request: RequestHeader, context: ApplicationContext) extends HtmlCleaner {
   private def findAtom(id: String): Option[Atom] = {
     atoms.flatMap(_.all.find(_.id == id))
   }
@@ -690,7 +695,7 @@ case class AtomsCleaner(atoms: Option[Atoms], shouldFence: Boolean = true, amp: 
           atomContainer.attr("data-atom-id", atomId)
           atomContainer.attr("data-atom-type", atomType)
 
-          val html = views.html.fragments.atoms.atom(atomData, Atoms.articleConfig, shouldFence, amp, mediaWrapper).toString()
+          val html = views.html.fragments.atoms.atom(atomData, Atoms.articleConfig, shouldFence, amp, mediaWrapper, posterImageOverride).toString()
           bodyElement.remove()
           atomContainer.append(html)
         }
@@ -711,13 +716,11 @@ object setSvgClasses {
   }
 }
 
-case class CommercialMPUForFronts(isNetworkFront: Boolean)(implicit val request: RequestHeader) extends HtmlCleaner {
-  import experiments.{ ActiveExperiments, ThrasherAdjacentMPU }
-
+case class CommercialMPUForFronts()(implicit val request: RequestHeader) extends HtmlCleaner {
   override def clean(document: Document): Document = {
 
-    def isNetworkFrontWithThrasher(element: Element, index: Int): Boolean = {
-      index == 0 && isNetworkFront && element.hasClass("fc-container--thrasher")
+    def hasFirstContainerThrasher(element: Element, index: Int): Boolean = {
+      index == 0 && element.hasClass("fc-container--thrasher")
     }
 
     def hasAdjacentCommercialContainer(element: Element): Boolean = {
@@ -732,12 +735,12 @@ case class CommercialMPUForFronts(isNetworkFront: Boolean)(implicit val request:
 
     val containers: List[Element] = document.getElementsByClass("fc-container").asScala.toList
 
-    // On mobile, we remove the first container if it is a thrasher on a Network Front
+    // On mobile, we remove the first container if it is a thrasher
     // and remove a container if it, or the next sibling, is a commercial container
+    // we also exclude any containers that are directly before a thrasher
     // then we take every other container, up to a maximum of 10, for targeting MPU insertion
     val containersForCommercialMPUs = containers.zipWithIndex.collect {
-      case (x, i) if ActiveExperiments.isParticipating(ThrasherAdjacentMPU) && !isNetworkFrontWithThrasher(x, i) && !hasAdjacentCommercialContainer(x) && !hasAdjacentThrasher(x) => x
-      case (x, i) if !ActiveExperiments.isParticipating(ThrasherAdjacentMPU) && !isNetworkFrontWithThrasher(x, i) && !hasAdjacentCommercialContainer(x) => x
+      case (x, i) if !hasFirstContainerThrasher(x, i) && !hasAdjacentCommercialContainer(x) && !hasAdjacentThrasher(x) => x
     }.zipWithIndex.collect {
       case (x, i) if i % 2 == 0 => x
     }.take(10)
@@ -804,12 +807,17 @@ object GarnettQuoteCleaner extends HtmlCleaner {
   }
 }
 
-case class AffiliateLinksCleaner(pageUrl: String, sectionId: String, showAffiliateLinks: Option[Boolean],
-  contentType: String, appendDisclaimer: Option[Boolean] = None) extends HtmlCleaner with Logging {
+case class AffiliateLinksCleaner(
+                                  pageUrl: String,
+                                  sectionId: String,
+                                  showAffiliateLinks: Option[Boolean],
+                                  contentType: String,
+                                  appendDisclaimer: Option[Boolean] = None,
+                                  tags: List[String]) extends HtmlCleaner with Logging {
 
   override def clean(document: Document): Document = {
-    if (AffiliateLinks.isSwitchedOn && AffiliateLinksCleaner.shouldAddAffiliateLinks(AffiliateLinkSections.isSwitchedOn,
-      sectionId, showAffiliateLinks, affiliateLinkSections)) {
+    if (AffiliateLinks.isSwitchedOn && AffiliateLinksCleaner.shouldAddAffiliateLinks(AffiliateLinks.isSwitchedOn,
+      sectionId, showAffiliateLinks, affiliateLinkSections, defaultOffTags, alwaysOffTags, tags)) {
       AffiliateLinksCleaner.replaceLinksInHtml(document, pageUrl, appendDisclaimer, contentType, skimlinksId)
     } else document
   }
@@ -844,12 +852,26 @@ object AffiliateLinksCleaner {
     s"http://go.theguardian.com/?id=$skimlinksId&url=$urlEncodedLink&sref=$host$pageUrl"
   }
 
-  def shouldAddAffiliateLinks(switchedOn: Boolean, section: String, showAffiliateLinks: Option[Boolean], supportedSections: Set[String]): Boolean = {
-    if (showAffiliateLinks.isDefined) {
-      showAffiliateLinks.contains(true)
-    } else {
-      switchedOn && supportedSections.contains(section)
-    }
+  def contentHasAlwaysOffTag(tagPaths: List[String], alwaysOffTags: Set[String]): Boolean = {
+    tagPaths.exists(path => alwaysOffTags.contains(path))
+  }
+
+  def shouldAddAffiliateLinks(
+    switchedOn: Boolean,
+    section: String,
+    showAffiliateLinks: Option[Boolean],
+    supportedSections: Set[String],
+    defaultOffTags: Set[String],
+    alwaysOffTags: Set[String],
+    tagPaths: List[String]
+  ): Boolean = {
+    if (!contentHasAlwaysOffTag(tagPaths, alwaysOffTags)) {
+      if (showAffiliateLinks.isDefined) {
+        showAffiliateLinks.contains(true)
+      } else {
+        switchedOn && supportedSections.contains(section) && !tagPaths.exists(path => defaultOffTags.contains(path))
+      }
+    } else false
   }
 
   def stringContainsAffiliateableLinks(s: String): Boolean = {

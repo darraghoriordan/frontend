@@ -60,7 +60,7 @@ GET         /analytics/confidence                                               
 # Reader Revenue
 GET         /reader-revenue                                                                         controllers.admin.ReaderRevenueAdminController.renderReaderRevenueMenu()
 GET         /reader-revenue/contributions-banner                                                    controllers.admin.ReaderRevenueAdminController.renderContributionsBannerAdmin()
-POST        /reader-revenue/redeploy-contributions-banner                                           controllers.admin.ReaderRevenueAdminController.redeployContributionsBanner()
+POST        /reader-revenue/redeploy-contributions-banner/$region<united-kingdom|united-states|australia|rest-of-world>                     controllers.admin.ReaderRevenueAdminController.redeployContributionsBanner(region)
 
 # Commercial
 GET         /commercial                                                                             controllers.admin.CommercialController.renderCommercialMenu()
@@ -77,7 +77,6 @@ GET         /commercial/keyvalues/csv/*key                                      
 GET         /commercial/dfp/flush/view                                                              controllers.admin.commercial.DfpDataController.renderCacheFlushPage()
 GET         /commercial/dfp/flush                                                                   controllers.admin.commercial.DfpDataController.flushCache()
 GET         /commercial/performance/radiator                                                        controllers.admin.CommercialController.renderCommercialRadiator()
-GET         /commercial/performance/browser-dashboard                                               controllers.admin.CommercialController.renderBrowserPerformanceDashboard()
 GET         /commercial/slot/:slotName                                                              controllers.admin.commercial.SlotController.viewSlot(slotName)
 GET         /commercial/adops/takeovers-empty-mpus                                                  controllers.admin.commercial.TakeoverWithEmptyMPUsController.viewList()
 GET         /commercial/adops/takeovers-empty-mpus/create                                           controllers.admin.commercial.TakeoverWithEmptyMPUsController.viewForm()

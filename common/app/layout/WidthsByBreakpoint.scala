@@ -2,7 +2,7 @@ package layout
 
 import cards._
 import BrowserWidth._
-import views.support.Profile
+import views.support.ImageProfile
 
 object FaciaWidths {
   private val MediaMobile = Map[CardType, BrowserWidth](
@@ -74,6 +74,10 @@ object FaciaWidths {
     (FullMedia100, 331.px)
   )
 
+  private val SquareImageFronts = Map[CardType, BrowserWidth](
+    (Standard, 368.px),
+  )
+
   def mediaFromItemClasses(itemClasses: ItemClasses): WidthsByBreakpoint = {
     val desktopClass = itemClasses.desktop.getOrElse(itemClasses.tablet)
 
@@ -81,6 +85,14 @@ object FaciaWidths {
       mobile          = MediaMobile.get(itemClasses.mobile),
       tablet          = MediaTablet.get(itemClasses.tablet),
       desktop         = MediaDesktop.get(desktopClass)
+    )
+  }
+
+  def squareFront(): WidthsByBreakpoint = {
+    WidthsByBreakpoint(
+      mobile          = SquareImageFronts.get(Standard),
+      tablet          = SquareImageFronts.get(Standard),
+      desktop         = SquareImageFronts.get(Standard)
     )
   }
 
@@ -95,98 +107,6 @@ object FaciaWidths {
   }
 }
 
-
-//TODO: We should only have one facia widths object. Consolidate this garnett one with the one above.
-object GarnettFaciaWidths {
-  private val MediaMobile = Map[CardType, BrowserWidth](
-    (MediaList, 127.px),
-    (Standard, 95.vw)
-  )
-
-  val ExtraPixelWidthsForMediaMobile: Seq[PixelWidth] = List(
-    445.px, // largest width for mobile breakpoint
-    605.px  // largest width for mobile landscape breakpoint
-  )
-
-  private val CutOutMobile = Map[CardType, BrowserWidth](
-    (MediaList, 115.px),
-    (Standard, 130.px)
-  )
-
-  private val MediaTablet = Map[CardType, BrowserWidth](
-    (MediaList, 140.px),
-    (Fluid, 140.px),
-    (Standard, 160.px),
-    (Third, 220.px),
-    (Half, 340.px),
-    (ThreeQuarters, 340.px),
-    (ThreeQuartersRight, 340.px),
-    (ThreeQuartersTall, 520.px),
-    (FullMedia50, 350.px),
-    (FullMedia75, 520.px),
-    (FullMedia100, 700.px)
-  )
-
-  private val CutOutTablet = Map[CardType, BrowserWidth](
-    (MediaList, 115.px),
-    (Standard, 216.px),
-    (Third, 187.px),
-    (Half, 331.px),
-    (ThreeQuarters, 331.px),
-    (ThreeQuartersRight, 331.px),
-    (ThreeQuartersTall, 331.px),
-    (FullMedia50, 331.px),
-    (FullMedia75, 331.px),
-    (FullMedia100, 331.px)
-  )
-
-  private val MediaDesktop = Map[CardType, BrowserWidth](
-    (MediaList, 140.px),
-    (Fluid, 188.px),
-    (Standard, 500.px),
-    (Third, 300.px),
-    (Half, 600.px),
-    (ThreeQuarters, 600.px),
-    (ThreeQuartersRight, 600.px),
-    (ThreeQuartersTall, 700.px),
-    (FullMedia50, 470.px),
-    (FullMedia75, 700.px),
-    (FullMedia100, 940.px)
-  )
-
-  private val CutOutDesktop = Map[CardType, BrowserWidth](
-    (MediaList, 115.px),
-    (Standard, 216.px),
-    (Third, 216.px),
-    (Half, 331.px),
-    (ThreeQuarters, 389.px),
-    (ThreeQuartersRight, 389.px),
-    (ThreeQuartersTall, 331.px),
-    (FullMedia50, 331.px),
-    (FullMedia75, 331.px),
-    (FullMedia100, 331.px)
-  )
-
-  def mediaFromItemClasses(itemClasses: ItemClasses): WidthsByBreakpoint = {
-    val desktopClass = itemClasses.desktop.getOrElse(itemClasses.tablet)
-
-    WidthsByBreakpoint(
-      mobile          = MediaMobile.get(itemClasses.mobile),
-      tablet          = MediaTablet.get(itemClasses.tablet),
-      desktop         = MediaDesktop.get(desktopClass)
-    )
-  }
-
-  def cutOutFromItemClasses(itemClasses: ItemClasses): WidthsByBreakpoint = {
-    val desktopClass = itemClasses.desktop.getOrElse(itemClasses.tablet)
-
-    WidthsByBreakpoint(
-      mobile  = CutOutMobile.get(itemClasses.mobile),
-      tablet  = CutOutTablet.get(itemClasses.tablet),
-      desktop = CutOutDesktop.get(desktopClass)
-    )
-  }
-}
 
 object ContentWidths {
 
@@ -211,6 +131,14 @@ object ContentWidths {
     def thumbnail: WidthsByBreakpoint = unused
     def immersive: WidthsByBreakpoint = unused
     def halfwidth: WidthsByBreakpoint = unused
+
+    def all: Map[String, WidthsByBreakpoint] = Map(
+      "inline" -> inline,
+      "supporting" -> supporting,
+      "showcase" -> showcase,
+      "thumbnail" -> thumbnail,
+      "immersive" -> immersive,
+      "halfwidth" -> halfwidth)
   }
 
   object BodyMedia extends ContentRelation {
@@ -252,11 +180,11 @@ object ContentWidths {
     override val showcase = WidthsByBreakpoint(
       mobile =          Some(465.px),
       mobileLandscape = Some(645.px),
-      phablet =         Some(620.px),
+      phablet =         Some(660.px),
       tablet =          Some(700.px),
-      desktop =         Some(620.px),
-      leftCol =         Some(780.px),
-      wide =            Some(860.px))
+      desktop =         Some(700.px),
+      leftCol =         Some(940.px),
+      wide =            Some(1020.px))
 
     /**
      * main image is showcase on a feature article, e.g.
@@ -405,9 +333,9 @@ case class WidthsByBreakpoint(
       s"(min-width: ${breakpoint.minWidth.get}px) $imageWidth"
   } mkString ", "
 
-  def profiles: Seq[Profile] = (breakpoints flatMap(_.toPixels(breakpoints)))
+  def profiles: Seq[ImageProfile] = (breakpoints flatMap(_.toPixels(breakpoints)))
     .distinct
-    .map((browserWidth: Int) => Profile(width = Some(browserWidth)))
+    .map((browserWidth: Int) => ImageProfile(width = Some(browserWidth)))
 }
 
 case class BreakpointWidth(breakpoint: Breakpoint, width: BrowserWidth) {

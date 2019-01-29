@@ -1,16 +1,16 @@
 .facia-snap--football {
     $slice-innerHeight: gs-height(5) - $gs-baseline / 3;
 
-    // Dealing with the double embedding of snaps
     overflow: hidden;
-    position: relative;
     padding: 0;
+    display: flex;
+    flex: 1 1 auto;
 
     // Generic
     &.facia-snap-embed {
-        height: auto;
-        margin: 0;
-        padding: 0 $gs-gutter/2;
+        height: 14rem;
+        margin: 0 $gs-gutter/2;
+        padding: 0;
         position: relative;
         background: #ffffff;
     }
@@ -18,15 +18,21 @@
     // Matches and tables
     // =============================================================================
     .c-football-table {
-        // this works as a min-height
-        height: $gs-baseline*14;
+        min-height: $gs-baseline*14;
         overflow: visible;
+        position: relative;
     }
 
     .c-football-matches {
-        overflow: hidden;
         background: $brightness-97;
         width: 100%;
+        position: relative;
+    }
+
+    .c-football-matches,
+    .football-embed {
+        overflow: visible; // ensure height expands in container
+        height: 100%;
     }
 
     .table,
@@ -52,7 +58,6 @@
 
     .table__caption--bottom {
         box-sizing: border-box;
-        background: $brightness-97;
         border-width: 0;
         bottom: 0;
         left: 0;
@@ -61,20 +66,33 @@
         position: absolute;
         margin: 0;
         padding: 0;
+        background-color: transparent;
 
         .full-table-link {
             display: inline-block;
         }
 
-        &:after {
-            @include simple-gradient(transparent, #f6f6f6);
-            height: $gs-baseline*1.5;
-            border-bottom: 1px solid $brightness-86;
-            bottom: $gs-baseline*2.75-2;
-            content: ' ';
-            left: 0;
-            position: absolute;
-            width: 100%;
+        tr {
+            background: transparent;
+            display: block;
+            width: auto;
+
+            td {
+                background: $brightness-97;
+                display: block;
+                position: relative; // for the after
+            }
+
+            td:after {
+                @include simple-gradient(transparent, #f6f6f6);
+                height: $gs-baseline*1.5;
+                border-bottom: 1px solid $brightness-86;
+                bottom: $gs-baseline*2.75-2;
+                content: ' ';
+                left: 0;
+                position: absolute;
+                width: 100%;
+            }
         }
     }
 
@@ -86,6 +104,32 @@
     .football-team__name {
         text-overflow: ellipsis;
     }
+
+    .football-match__team--home {
+        padding-right: 14px;
+    }
+    .football-match__team--away {
+        padding-left: 14px;
+    }
+
+    .football-match--live {
+        .football-match__team--home {
+            padding-right: 18px;
+        }
+        .football-match__team--away {
+            padding-left: 18px;
+        }
+    }
+
+    .football-match--result {
+        .football-match__team--home {
+            padding-right: 20px;
+        }
+        .football-match__team--away {
+            padding-left: 20px;
+        }
+    }
+
 
     .football-matches__day:last-child {
         .table__caption--bottom {
@@ -207,17 +251,17 @@ $footballBadgeSizeDesktop: 120px;
 
 }
 
-.facia-snap.facia-snap--football.facia-snap-embed {
-    height: auto !important; // height is normally set on the parent snap element in Facia
-}
-
 .facia-snap--football .inline-icon {
     fill: #ffffff; /* override garnett styling */
 }
 
 .football-embed {
     height: 14rem;
-    position: relative;
+    overflow: visible;
+}
+
+.content__main-column--liveblog .football-embed {
+    height: auto;
 }
 
 .football-embed.knockout-embed {

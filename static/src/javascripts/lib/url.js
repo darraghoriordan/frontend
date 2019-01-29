@@ -1,9 +1,26 @@
 // @flow
 
 import { hasPushStateSupport } from 'lib/detect';
-import memoize from 'lodash/functions/memoize';
+import memoize from 'lodash/memoize';
 
 const supportsPushState = hasPushStateSupport();
+
+/* commercial testing instrument */
+// Returns a map { <bidderName>: true } of bidders
+// according to the pbtest URL parameter
+
+const pbTestNameMap: () => { [string]: boolean } = memoize(
+    (): { [string]: boolean } =>
+        new URLSearchParams(window.location.search)
+            .getAll('pbtest')
+            .reduce((acc, value) => {
+                acc[value] = true;
+                return acc;
+            }, {}),
+    (): string =>
+        // Same implicit parameter as the memoized function
+        window.location.search
+);
 
 // returns "foo=bar&fizz=buzz" (eg. no ? symbol)
 const getCurrentQueryString = (): string =>
@@ -98,4 +115,5 @@ export {
     supportsPushState,
     pushQueryString,
     replaceQueryString,
+    pbTestNameMap,
 };

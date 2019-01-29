@@ -65,8 +65,6 @@ module.exports = {
             journalism: 'projects/journalism',
 
             // #wp-rjs weird old aliasing from requirejs
-            lodash: 'lodash-node/compat',
-            raven: 'raven-js',
             videojs: 'video.js',
 
             svgs: path.join(__dirname, 'static', 'src', 'inline-svgs'),
@@ -90,7 +88,7 @@ module.exports = {
                 test: /\.js$/,
                 // TODO: @guardian/dotcom-rendering is not properly published or pre-transpiled, so we have to
                 // transpile it as part of the frontend build step for now
-                exclude: /(node_modules(?!\/@guardian\/dotcom-rendering)|vendor)/,
+                exclude: /(node_modules(?!\/@guardian\/dotcom-rendering)|vendor\/)/,
                 loader: 'babel-loader',
             },
             {

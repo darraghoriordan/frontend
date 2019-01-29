@@ -3,10 +3,9 @@ import { trackNonClickInteraction } from 'common/modules/analytics/google';
 import React, { render } from 'preact-compat';
 import fastdom from 'lib/fastdom-promise';
 import ophan from 'ophan/ng';
-import { ConsentCardList } from 'common/modules/identity/upsell/consent-card/ConsentCardList';
-import loadEnhancers from './../modules/loadEnhancers';
-import { AccountCreationFlow } from './account-creation/AccountCreationFlow';
-import { OptOutsList } from './opt-outs/OptOutsList';
+import loadEnhancers from 'common/modules/identity/modules/loadEnhancers';
+import { AccountCreationCompleteConsentsFlow } from 'common/modules/identity/upsell/account-creation/AccountCreationCompleteConsentsFlow';
+import { StatefulConfirmEmailPage } from './page/StatefulConfirmEmailPage';
 
 const trackInteraction = (interaction: string): void => {
     ophan.record({
@@ -20,7 +19,7 @@ const bindAccountCreation = (el): void => {
     trackInteraction('set-password : display');
     fastdom.write(() => {
         render(
-            <AccountCreationFlow
+            <AccountCreationCompleteConsentsFlow
                 csrfToken={el.dataset.csrf}
                 accountToken={el.dataset.accountToken}
                 email={el.dataset.email}
@@ -30,26 +29,43 @@ const bindAccountCreation = (el): void => {
     });
 };
 
-const bindOptouts = (el): void => {
-    fastdom.write(() => {
-        render(<OptOutsList />, el);
-    });
+type Prefill = {
+    csrfToken: string,
+    accountToken: ?string,
+    email: string,
+    hasPassword: boolean,
+    hasSocialLinks: boolean,
 };
 
-const bindConfirmEmailThankYou = (el): void => {
-    fastdom.write(() => {
-        render(<ConsentCardList />, el);
-    });
+const getPrefill = (el: HTMLElement): Prefill => ({
+    csrfToken: el.dataset.csrfToken,
+    accountToken: el.dataset.accountToken,
+    email: el.dataset.email,
+    hasPassword: el.dataset.hasPassword === 'true',
+    hasSocialLinks: el.dataset.hasSocialLinks === 'true',
+});
+
+const bindBlockList = (el): void => {
+    fastdom.read(() => getPrefill(el)).then(prefill =>
+        fastdom.write(() => {
+            render(
+                <StatefulConfirmEmailPage
+                    csrfToken={prefill.csrfToken}
+                    accountToken={prefill.accountToken}
+                    email={prefill.email}
+                    hasPassword={prefill.hasPassword}
+                    hasSocialLinks={prefill.hasSocialLinks}
+                />,
+                el
+            );
+        })
+    );
 };
 
 const enhanceUpsell = (): void => {
     loadEnhancers([
         ['.js-identity-upsell-account-creation', bindAccountCreation],
-        ['.js-identity-upsell-optputs', bindOptouts],
-        [
-            '.js-identity-upsell-confirm-email-thank-you',
-            bindConfirmEmailThankYou,
-        ],
+        ['.js-identity-block-list', bindBlockList],
     ]);
 };
 

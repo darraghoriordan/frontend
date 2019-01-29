@@ -50,6 +50,8 @@ import { breakingNews } from 'common/modules/onward/breaking-news';
 import { trackConsentCookies } from 'common/modules/analytics/send-privacy-prefs';
 import { getAllAdConsentsWithState } from 'common/modules/commercial/ad-prefs.lib';
 import ophan from 'ophan/ng';
+import { adFreeBanner } from 'common/modules/commercial/ad-free-banner';
+import { init as initReaderRevenueDevUtils } from 'common/modules/commercial/reader-revenue-dev-utils';
 
 const initialiseTopNavItems = (): void => {
     const header: ?HTMLElement = document.getElementById('header');
@@ -173,6 +175,20 @@ const checkIframe = (): void => {
     }
 };
 
+const normalise = (): void => {
+    if (document.location.hash === '#nfn') {
+        localStorage.set('nfn', true);
+    }
+    if (document.location.hash === '#nnfn') {
+        localStorage.remove('nfn');
+    }
+    if (localStorage.get('nfn')) {
+        import('common/modules/ui/normalise').then(({ go }) => {
+            go();
+        });
+    }
+};
+
 const startRegister = (): void => {
     initAnalyticsRegister();
 };
@@ -274,6 +290,7 @@ const initialiseBanner = (): void => {
         membershipBanner,
         membershipEngagementBanner,
         smartAppBanner,
+        adFreeBanner,
         emailSignInBanner,
     ];
     initBannerPicker(bannerList);
@@ -294,6 +311,7 @@ const init = (): void => {
         ['c-event-listeners', windowEventListeners],
         ['c-block-link', fauxBlockLink],
         ['c-iframe', checkIframe],
+        ['c-normalise', normalise],
         ['c-tabs', showTabs],
         ['c-top-nav', initialiseTopNavItems],
         ['c-init-nav', initialiseNavigation],
@@ -316,6 +334,7 @@ const init = (): void => {
         ['c-user-features', refreshUserFeatures],
         ['c-membership', initMembership],
         ['c-banner-picker', initialiseBanner],
+        ['c-reader-revenue-dev-utils', initReaderRevenueDevUtils],
     ]);
 };
 

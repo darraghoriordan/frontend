@@ -3,6 +3,8 @@
 import config from 'lib/config';
 import { prebid } from 'commercial/modules/prebid/prebid';
 
+jest.mock('lib/raven');
+
 jest.mock('commercial/modules/dfp/Advert', () =>
     jest.fn().mockImplementation(() => ({ advert: jest.fn() }))
 );
@@ -14,6 +16,7 @@ jest.mock('commercial/modules/prebid/bid-config', () => ({
 describe('initialise', () => {
     beforeEach(() => {
         config.set('switches.enableConsentManagementService', true);
+        config.set('switches.prebidUserSync', true);
         config.set('switches.prebidAppNexus', true);
         config.set('switches.prebidS2sozone', true);
         config.set('switches.prebidSonobi', true);
@@ -27,28 +30,17 @@ describe('initialise', () => {
         expect(window.pbjs.getConfig()).toEqual({
             _bidderSequence: 'random',
             _bidderTimeout: 1500,
-            _cookieSyncDelay: 100,
             _customPriceBucket: {
                 buckets: [
                     {
-                        increment: 0.05,
-                        max: 5,
+                        increment: 0.01,
+                        max: 100,
                         min: 0,
                     },
                     {
-                        increment: 0.1,
-                        max: 10,
-                        min: 5,
-                    },
-                    {
-                        increment: 0.5,
-                        max: 20,
-                        min: 10,
-                    },
-                    {
-                        increment: 10,
-                        max: 40,
-                        min: 20,
+                        increment: 1,
+                        max: 500,
+                        min: 100,
                     },
                 ],
             },
@@ -56,9 +48,9 @@ describe('initialise', () => {
             _disableAjaxTimeout: false,
             _mediaTypePriceGranularity: {},
             _priceGranularity: 'custom',
-            _publisherDomain: 'null',
+            _publisherDomain: 'http://localhost',
             _sendAllBids: true,
-            _timoutBuffer: 200,
+            _timeoutBuffer: 400,
             bidderSequence: 'random',
             bidderTimeout: 1500,
             consentManagement: {
@@ -66,28 +58,17 @@ describe('initialise', () => {
                 cmpApi: 'iab',
                 timeout: 200,
             },
-            cookieSyncDelay: 100,
             customPriceBucket: {
                 buckets: [
                     {
-                        increment: 0.05,
-                        max: 5,
+                        increment: 0.01,
+                        max: 100,
                         min: 0,
                     },
                     {
-                        increment: 0.1,
-                        max: 10,
-                        min: 5,
-                    },
-                    {
-                        increment: 0.5,
-                        max: 20,
-                        min: 10,
-                    },
-                    {
-                        increment: 10,
-                        max: 40,
-                        min: 20,
+                        increment: 1,
+                        max: 500,
+                        min: 100,
                     },
                 ],
             },
@@ -96,11 +77,11 @@ describe('initialise', () => {
             enableSendAllBids: true,
             mediaTypePriceGranularity: {},
             priceGranularity: 'custom',
-            publisherDomain: 'null',
+            publisherDomain: 'http://localhost',
             s2sConfig: {
                 accountId: '1',
                 adapter: 'prebidServer',
-                bidders: ['appnexus', 'openx'],
+                bidders: ['appnexus', 'openx', 'pangaea'],
                 cookieSet: true,
                 cookiesetUrl: 'https://acdn.adnxs.com/cookieset/cs.js',
                 enabled: true,
@@ -110,15 +91,15 @@ describe('initialise', () => {
                 syncEndpoint: 'https://elb.the-ozone-project.com/cookie_sync',
                 timeout: 1500,
             },
-            timeoutBuffer: 200,
+            timeoutBuffer: 400,
             userSync: {
                 pixelEnabled: true,
                 syncDelay: 3000,
                 syncEnabled: true,
-                syncsPerBidder: 0,
+                syncsPerBidder: 999,
                 filterSettings: {
-                    iframe: {
-                        bidders: ['sonobi'],
+                    all: {
+                        bidders: '*',
                         filter: 'include',
                     },
                 },
@@ -154,5 +135,11 @@ describe('initialise', () => {
         config.set('switches.prebidXaxis', false);
         prebid.initialise();
         expect(window.pbjs.bidderSettings).toEqual({});
+    });
+
+    test('should generate correct Prebid config when user-sync off', () => {
+        config.set('switches.prebidUserSync', false);
+        prebid.initialise();
+        expect(window.pbjs.getConfig().userSync.syncEnabled).toEqual(false);
     });
 });

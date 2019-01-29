@@ -18,12 +18,13 @@ import { initUserEditLink } from 'common/modules/discussion/user-edit-link';
 import { init as initTabs } from 'common/modules/ui/tabs';
 import { enhanceAdPrefs } from 'common/modules/identity/ad-prefs';
 import { enhanceUpsell } from 'common/modules/identity/upsell/upsell';
-import { enhanceFollow } from 'common/modules/identity/follow';
 
 const initFormstack = (): void => {
     const attr = 'data-formstack-id';
-    const forms = [...document.querySelectorAll(`[${attr}]`)];
-    const iframes = [...document.getElementsByClassName('js-formstack-iframe')];
+    const forms = Array.from(document.querySelectorAll(`[${attr}]`));
+    const iframes = Array.from(
+        document.getElementsByClassName('js-formstack-iframe')
+    );
 
     forms.forEach(form => {
         const id = form.getAttribute(attr) || '';
@@ -67,7 +68,6 @@ const initProfile = (): void => {
         ['enhance-consent-journey', enhanceConsentJourney],
         ['init-header', initHeader],
         ['init-upsell', enhanceUpsell],
-        ['init-follow', enhanceFollow],
     ];
     catchErrorsWithContext(modules);
 };

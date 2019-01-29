@@ -10,7 +10,7 @@ import { Component } from 'common/modules/component';
 import $ from 'lib/$';
 import config from 'lib/config';
 import { isIOS, isAndroid, isBreakpoint } from 'lib/detect';
-import debounce from 'lodash/functions/debounce';
+import debounce from 'lodash/debounce';
 import { isOn as accessibilityIsOn } from 'common/modules/accessibility/main';
 
 declare class YoutubePlayerTarget extends EventTarget {
@@ -177,11 +177,15 @@ const shouldAutoplay = (atomId: string): boolean => {
     const flashingElementsAllowed = () =>
         accessibilityIsOn('flashing-elements');
 
+    const isVideoArticle = () =>
+        config.get('page.contentType', '').toLowerCase() === 'video';
+
+    const isFront = () => config.get('page.isFront');
+
     return (
-        config.get('page.contentType') === 'Video' &&
-        isInternalReferrer() &&
+        ((isVideoArticle() && isInternalReferrer() && isMainVideo()) ||
+            isFront()) &&
         !isAutoplayBlockingPlatform() &&
-        isMainVideo() &&
         flashingElementsAllowed()
     );
 };
@@ -268,42 +272,59 @@ const onPlayerReady = (
 const onPlayerStateChange = (atomId: string, event: YoutubePlayerEvent): void =>
     Object.keys(STATES).forEach(checkState.bind(null, atomId, event.data));
 
+const initYoutubePlayerForElem = (el: ?HTMLElement, index: number): void => {
+    fastdom.read(() => {
+        if (!el) return;
+
+        const playerDiv = el.querySelector('div');
+
+        if (!playerDiv) {
+            return;
+        }
+
+        playerDivs.push(playerDiv);
+
+        // append index of atom as atomId must be unique
+        const atomId = `${el.getAttribute('data-media-atom-id') ||
+            ''}/${index}`;
+        // need data attribute with index for unique lookup
+        el.setAttribute('data-unique-atom-id', atomId);
+        const overlay = el.querySelector('.youtube-media-atom__overlay');
+        const channelId = el.getAttribute('data-channel-id') || '';
+
+        initYoutubeEvents(getTrackingId(atomId));
+
+        initYoutubePlayer(
+            playerDiv,
+            {
+                onPlayerReady: onPlayerReady.bind(
+                    null,
+                    atomId,
+                    overlay,
+                    playerDiv
+                ),
+                onPlayerStateChange: onPlayerStateChange.bind(null, atomId),
+            },
+            playerDiv.dataset.assetId,
+            channelId
+        );
+    });
+};
+
 const checkElemForVideo = (elem: ?HTMLElement): void => {
     if (!elem) return;
 
     fastdom.read(() => {
         $('.youtube-media-atom:not(.no-player)', elem).each((el, index) => {
-            const playerDiv = el.querySelector('div');
-
-            if (!playerDiv) {
-                return;
-            }
-
-            playerDivs.push(playerDiv);
-
-            // append index of atom as atomId must be unique
-            const atomId = `${el.getAttribute('data-media-atom-id')}/${index}`;
-            // need data attribute with index for unique lookup
-            el.setAttribute('data-unique-atom-id', atomId);
             const overlay = el.querySelector('.youtube-media-atom__overlay');
-            const channelId = el.getAttribute('data-channel-id');
 
-            initYoutubeEvents(getTrackingId(atomId));
-
-            initYoutubePlayer(
-                playerDiv,
-                {
-                    onPlayerReady: onPlayerReady.bind(
-                        null,
-                        atomId,
-                        overlay,
-                        playerDiv
-                    ),
-                    onPlayerStateChange: onPlayerStateChange.bind(null, atomId),
-                },
-                playerDiv.dataset.assetId,
-                channelId
-            );
+            if (config.get('page.isFront')) {
+                overlay.addEventListener('click', () => {
+                    initYoutubePlayerForElem(el, index);
+                });
+            } else {
+                initYoutubePlayerForElem(el, index);
+            }
         });
     });
 };

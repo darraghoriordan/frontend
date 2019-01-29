@@ -1,7 +1,7 @@
 package pages
 
 import common.Edition
-import conf.switches.Switches.{LotameSwitch, WeAreHiring}
+import conf.switches.Switches.WeAreHiring
 import controllers.InteractivePage
 import experiments.{ActiveExperiments, OldTLSSupportDeprecation}
 import html.{HtmlPage, Styles}
@@ -16,7 +16,7 @@ import views.html.fragments.page.head.stylesheets.{criticalStyleInline, critical
 import views.html.fragments.page.{devTakeShot, htmlTag}
 import views.html.fragments._
 import views.html.stacked
-import html.HtmlPageHelpers.ContentCSSFile
+import html.HtmlPageHelpers.{ContentCSSFile}
 
 object InteractiveHtmlPage extends HtmlPage[InteractivePage] {
 
@@ -48,7 +48,6 @@ object InteractiveHtmlPage extends HtmlPage[InteractivePage] {
       headTag(
         weAreHiring() when WeAreHiring.isSwitchedOn,
         orielScriptTag(),
-        lotameScriptTag() when LotameSwitch.isSwitchedOn,
         titleTag(),
         metaData(),
         styles(allStyles),

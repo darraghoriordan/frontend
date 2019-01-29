@@ -181,12 +181,33 @@
         width: $left-column;
         margin-left: -($left-column + $gs-gutter);
         margin-bottom: $gs-baseline;
+
+        &.content__labels--crossword {
+            width: inherit;
+        }
     }
 
     @include mq(wide) {
         margin-left: -($left-column-wide + $gs-gutter);
         width: $left-column-wide;
     }
+}
+
+.content__labels--flagship.content__labels--flagship.content__labels--flagship {
+    .content--media & {
+        padding: 6px 0 0;
+
+        .content__label__link {
+            color: $highlight-main;
+
+        }
+    }
+
+    .content--pillar-news &      { .content__label__link { color: $news-bright; } }
+    .content--pillar-sport &     { .content__label__link { color: $sport-bright; } }
+    .content--pillar-opinion &   { .content__label__link { color: $opinion-bright; } }
+    .content--pillar-arts &      { .content__label__link { color: $culture-bright; } }
+    .content--pillar-lifestyle & { .content__label__link { color: $lifestyle-bright; } }
 }
 
 .content__label {
@@ -269,6 +290,18 @@
     }
 }
 
+.content__headline--flagship {
+    padding-top: 0;
+
+    @include mq(leftCol) {
+        .content.content:not(.paid-content) & {
+            padding-left: $gs-gutter / 2;
+            margin-left: $gs-gutter / -2;
+            border-left: 1px solid $brightness-20;
+        }
+    }
+}
+
 .content__head--byline-pic {
     overflow: hidden;
 
@@ -302,6 +335,7 @@
     @include fs-headline(2);
     margin-bottom: $gs-baseline/2;
     color: $brightness-7;
+    z-index: 1;
 
     @include mq(tablet) {
         @include font-size(18px, 22px);
@@ -974,6 +1008,7 @@
         }
     }
 }
+
 .paid-content {
     color: $brightness-7;
     .content__head {
@@ -1046,6 +1081,7 @@
         padding: ($gs-baseline / 4) 0 ($gs-baseline * 2);
         .content__standfirst {
             color: $brightness-7;
+            font-weight: lighter;
         }
     }
     .tone-media--item {

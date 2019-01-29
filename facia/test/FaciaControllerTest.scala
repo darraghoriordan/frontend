@@ -196,6 +196,21 @@ import scala.concurrent.Await
     val (key, html) = jsonResponse.as[Map[String,String]].head
     key shouldBe "body"
     html should include ("<!DOCTYPE html")
+    val responseHeaders = headers(emailJsonResponse)
+    responseHeaders("Surrogate-Control") should include("max-age=60")
+  }
+
+  it should "render txt email fronts" in {
+    val emailRequest = FakeRequest("GET", "/email/uk/daily.emailtxt")
+    val emailJsonResponse = faciaController.renderFront("email/uk/daily")(emailRequest)
+    status(emailJsonResponse) shouldBe 200
+    val jsonResponse = contentAsJson(emailJsonResponse)
+    val (key, text) = jsonResponse.as[Map[String,String]].head
+    key shouldBe "body"
+    text should not include "<!DOCTYPE html"
+    text should include ("The Guardian Today | The Guardian")
+    val responseHeaders = headers(emailJsonResponse)
+    responseHeaders("Surrogate-Control") should include("max-age=60")
   }
 
   it should "render email fronts" in {
@@ -205,6 +220,8 @@ import scala.concurrent.Await
     assertThrows[JsonParseException](contentAsJson(emailJsonResponse))
     contentAsString(emailJsonResponse)
     contentAsString(emailJsonResponse) should include ("<!DOCTYPE html")
+    val responseHeaders = headers(emailJsonResponse)
+    responseHeaders("Surrogate-Control") should include("max-age=900")
   }
 
 }

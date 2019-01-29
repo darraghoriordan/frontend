@@ -1,6 +1,6 @@
 // @flow
 
-import debounce from 'lodash/functions/debounce';
+import debounce from 'lodash/debounce';
 import ophan from 'ophan/ng';
 import { isBreakpoint } from 'lib/detect';
 import mediator from 'lib/mediator';
@@ -27,7 +27,7 @@ const getMenu = (): ?HTMLElement =>
     document.getElementsByClassName('js-main-menu')[0];
 
 const getSectionToggleMenuItem = (section: HTMLElement): ?HTMLElement => {
-    const children = [...section.children];
+    const children = Array.from(section.children);
     return children.find(child => child.classList.contains('menu-item__title'));
 };
 
@@ -40,7 +40,9 @@ const closeMenuSection = (section: HTMLElement): void => {
 };
 
 const closeAllMenuSections = (exclude?: Node): void => {
-    const sections = [...document.querySelectorAll('.js-navigation-item')];
+    const sections = Array.from(
+        document.querySelectorAll('.js-navigation-item')
+    );
 
     sections.forEach(section => {
         if (section !== exclude) {
@@ -112,7 +114,9 @@ const toggleMenu = (): void => {
     }
 
     const resetItemOrder = (): void => {
-        const items = [...document.querySelectorAll('.js-navigation-item')];
+        const items = Array.from(
+            document.querySelectorAll('.js-navigation-item')
+        );
 
         items.forEach(item => {
             const listItem = item;
@@ -233,6 +237,8 @@ const toggleMenu = (): void => {
 };
 
 const toggleDropdown = (menuAndTriggerEls: MenuAndTriggerEls): void => {
+    const documentElement = document.documentElement;
+    const globalOpenClass = 'dropdown--open';
     const openClass = 'dropdown-menu--open';
 
     fastdom.read(() => menuAndTriggerEls).then(els => {
@@ -253,13 +259,21 @@ const toggleDropdown = (menuAndTriggerEls: MenuAndTriggerEls): void => {
 
             menu.setAttribute('aria-hidden', hiddenAttr);
             menu.classList.toggle(openClass, !isOpen);
-            if (!isOpen) {
+
+            if (documentElement) {
+                documentElement.classList.toggle(globalOpenClass, !isOpen);
+            }
+
+            if (!isOpen && document.body) {
+                // Prevents menu from being disconnected with trigger
+                (document.documentElement || document.body).scrollTop = 0;
+
                 const menuId = menu.getAttribute('id');
                 const triggerToggle = clickSpec => {
                     const elem = clickSpec ? clickSpec.target : null;
-
                     if (elem !== menu) {
                         toggleDropdown(menuAndTriggerEls);
+
                         // remove event listener when the dropdown closes
                         if (menuId) {
                             removeClickstreamListener(menuId);
@@ -426,9 +440,9 @@ const enhanceCheckbox = (checkbox: HTMLElement): void => {
 };
 
 const enhanceMenuToggles = (): void => {
-    const checkboxs: Array<HTMLInputElement> = ([
-        ...document.getElementsByClassName('js-enhance-checkbox'),
-    ]: Array<any>);
+    const checkboxs: Array<HTMLInputElement> = (Array.from(
+        document.getElementsByClassName('js-enhance-checkbox')
+    ): Array<any>);
 
     checkboxs.forEach(checkbox => {
         if (!enhanced[checkbox.id] && !checkbox.checked) {
@@ -569,9 +583,9 @@ const addEventHandler = (): void => {
 const bindCredentialsApiSignIn = (): void => {
     fastdom
         .read(() => ({
-            signInLinks: [
-                ...document.querySelectorAll('.js-navigation-sign-in'),
-            ],
+            signInLinks: Array.from(
+                document.querySelectorAll('.js-navigation-sign-in')
+            ),
         }))
         .then(({ signInLinks }) => {
             signInLinks.forEach(signInLink => {

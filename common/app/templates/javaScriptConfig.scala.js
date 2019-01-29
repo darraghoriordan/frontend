@@ -28,8 +28,8 @@
             },
             "acquisitions": {
                 "paypal-and-credit-card": "@Static("images/acquisitions/paypal-and-credit-card.png")",
-                "info-logo": "@Static("images/acquisitions/info-logo.svg")"
-
+                "info-logo": "@Static("images/acquisitions/info-logo.svg")",
+                "ad-free": "@Static("images/acquisitions/ad-free.svg")"
             },
             "journalism": {
                 "apple-podcast-logo": "@Static("images/journalism/apple-podcast-icon-48.png")"
@@ -37,7 +37,7 @@
             }
         },
         "stylesheets": {
-            "fonts": {
+           "fonts": {
                 "hintingCleartype": {
                     "kerningOn": "@Static("stylesheets/webfonts-hinting-cleartype-kerning-on.css")"
                 },
@@ -59,7 +59,7 @@
         },
         "libs": {
             "googletag": "@{Configuration.javascript.config("googletagJsUrl")}",
-            "sonobi": "@{Configuration.javascript.config("sonobiHeaderBiddingJsUrl")}"
+            "cmp": { "fullVendorDataUrl": "@Static("data/vendor/cmp_vendorlist.json")" }
         }
     }
 }

@@ -1,28 +1,24 @@
 // @flow strict
 
 import config from 'lib/config';
-import memoize from 'lodash/functions/memoize';
-import isEmpty from 'lodash/objects/isEmpty';
+import { pbTestNameMap } from 'lib/url';
+import isEmpty from 'lodash/isEmpty';
 import {
     buildAppNexusTargeting,
+    buildAppNexusTargetingObject,
     buildPageTargeting,
 } from 'common/modules/commercial/build-page-targeting';
-import { commercialPrebidAdYouLike } from 'common/modules/experiments/tests/commercial-prebid-adyoulike';
 import { commercialPrebidSafeframe } from 'common/modules/experiments/tests/commercial-prebid-safeframe';
-import {
-    getParticipations,
-    getVariant,
-    isInVariant,
-} from 'common/modules/experiments/utils';
+import { isInVariantSynchronous } from 'common/modules/experiments/ab';
 import type {
     PrebidAdYouLikeParams,
     PrebidAppNexusParams,
     PrebidBid,
     PrebidBidder,
     PrebidImproveParams,
-    PrebidImproveSizeParam,
     PrebidIndexExchangeParams,
     PrebidOpenXParams,
+    PrebidPubmaticParams,
     PrebidSize,
     PrebidSonobiParams,
     PrebidTrustXParams,
@@ -36,20 +32,26 @@ import {
     containsMpu,
     containsMpuOrDmpu,
     getBreakpointKey,
-    getRandomIntInclusive,
-    isExcludedGeolocation,
+    isInAuRegion,
+    isInRowRegion,
+    isInUkRegion,
+    isInUsRegion,
     shouldIncludeAdYouLike,
     shouldIncludeAppNexus,
+    shouldIncludeImproveDigital,
     shouldIncludeOpenx,
+    shouldIncludeOzone,
+    shouldIncludeSonobi,
     shouldIncludeTrustX,
+    shouldIncludeXaxis,
+    stripDfpAdPrefixFrom,
     stripMobileSuffix,
     stripTrailingNumbersAbove1,
 } from './utils';
+import { getAppNexusDirectBidParams, getAppNexusPlacementId } from './appnexus';
 
-const isInSafeframeTestVariant = (): boolean => {
-    const variant = getVariant(commercialPrebidSafeframe, 'variant');
-    return variant ? isInVariant(commercialPrebidSafeframe, variant) : false;
-};
+const isInSafeframeTestVariant = (): boolean =>
+    isInVariantSynchronous(commercialPrebidSafeframe, 'variant');
 
 const isDesktopAndArticle =
     getBreakpointKey() === 'D' && config.get('page.contentType') === 'Article';
@@ -154,114 +156,67 @@ const getImprovePlacementId = (sizes: PrebidSize[]): number => {
             default:
                 return -1;
         }
-    } else {
-        switch (config.get('page.edition')) {
-            case 'UK':
-                switch (getBreakpointKey()) {
-                    case 'D':
-                        if (containsMpuOrDmpu(sizes)) {
-                            return 1116396;
-                        }
-                        if (containsLeaderboardOrBillboard(sizes)) {
-                            return 1116397;
-                        }
-                        return -1;
-                    case 'M':
-                        if (containsMpuOrDmpu(sizes)) {
-                            return 1116400;
-                        }
-                        return -1;
-                    case 'T':
-                        if (containsMpuOrDmpu(sizes)) {
-                            return 1116398;
-                        }
-                        if (containsLeaderboardOrBillboard(sizes)) {
-                            return 1116399;
-                        }
-                        return -1;
-                    default:
-                        return -1;
+    }
+    if (isInUkRegion()) {
+        switch (getBreakpointKey()) {
+            case 'D':
+                if (containsMpuOrDmpu(sizes)) {
+                    return 1116396;
                 }
-            case 'INT':
-                switch (getBreakpointKey()) {
-                    case 'D':
-                        if (containsMpuOrDmpu(sizes)) {
-                            return 1116420;
-                        }
-                        if (containsLeaderboardOrBillboard(sizes)) {
-                            return 1116421;
-                        }
-                        return -1;
-                    case 'M':
-                        if (containsMpuOrDmpu(sizes)) {
-                            return 1116424;
-                        }
-                        return -1;
-                    case 'T':
-                        if (containsMpuOrDmpu(sizes)) {
-                            return 1116422;
-                        }
-                        if (containsLeaderboardOrBillboard(sizes)) {
-                            return 1116423;
-                        }
-                        return -1;
-                    default:
-                        return -1;
+                if (containsLeaderboardOrBillboard(sizes)) {
+                    return 1116397;
                 }
+                return -1;
+            case 'M':
+                if (containsMpuOrDmpu(sizes)) {
+                    return 1116400;
+                }
+                return -1;
+            case 'T':
+                if (containsMpuOrDmpu(sizes)) {
+                    return 1116398;
+                }
+                if (containsLeaderboardOrBillboard(sizes)) {
+                    return 1116399;
+                }
+                return -1;
             default:
                 return -1;
         }
     }
-};
-
-const getAppNexusDirectPlacementId = (): string => '11016434';
-
-const getAppNexusPlacementId = (sizes: PrebidSize[]): string => {
-    switch (config.get('page.edition')) {
-        case 'UK':
-            switch (getBreakpointKey()) {
-                case 'D':
-                    if (containsMpuOrDmpu(sizes)) {
-                        return '13366606';
-                    }
-                    if (containsLeaderboardOrBillboard(sizes)) {
-                        return '13366615';
-                    }
-                    return '13144370';
-                case 'M':
-                    if (containsMpu(sizes)) {
-                        return '13366904';
-                    }
-                    return '13144370';
-                case 'T':
-                    if (containsMpu(sizes)) {
-                        return '13366913';
-                    }
-                    if (containsLeaderboard(sizes)) {
-                        return '13366916';
-                    }
-                    return '13144370';
-                default:
-                    return '13144370';
-            }
-        default:
-            return '13144370';
+    if (isInRowRegion()) {
+        switch (getBreakpointKey()) {
+            case 'D':
+                if (containsMpuOrDmpu(sizes)) {
+                    return 1116420;
+                }
+                if (containsLeaderboardOrBillboard(sizes)) {
+                    return 1116421;
+                }
+                return -1;
+            case 'M':
+                if (containsMpuOrDmpu(sizes)) {
+                    return 1116424;
+                }
+                return -1;
+            case 'T':
+                if (containsMpuOrDmpu(sizes)) {
+                    return 1116422;
+                }
+                if (containsLeaderboardOrBillboard(sizes)) {
+                    return 1116423;
+                }
+                return -1;
+            default:
+                return -1;
+        }
     }
-};
-
-const getAdYouLikePlacementId = (): string => {
-    const test = commercialPrebidAdYouLike;
-    const participations = getParticipations();
-    const participation = participations ? participations[test.id] : {};
-    const variant = participation
-        ? getVariant(test, participation.variant)
-        : {};
-    return variant && variant.options ? variant.options.placementId : '';
+    return -1;
 };
 
 // Improve has to have single size as parameter if slot doesn't accept multiple sizes,
 // because it uses same placement ID for multiple slot sizes and has no other size information
-const getImproveSizeParam = (slotId: string): PrebidImproveSizeParam => {
+const getImproveSizeParam = (slotId: string): { w?: number, h?: number } => {
     const key = stripTrailingNumbersAbove1(stripMobileSuffix(slotId));
     return key &&
         (key.endsWith('mostpop') ||
@@ -279,24 +234,90 @@ const getXaxisPlacementId = (sizes: PrebidSize[]): number => {
     return 13663304;
 };
 
-/* testing instrument */
-// Returns a map { <bidderName>: true } of bidders
-// according to the pbtest URL parameter
+const getPangaeaPlacementId = (sizes: PrebidSize[]): number => {
+    type PangaeaSection = {
+        sections: Array<string>,
+        lb: number,
+        mmpu: number,
+        dmpu: number,
+    };
+    const pangaeaList: Array<PangaeaSection> = [
+        {
+            sections: ['business'],
+            lb: 13892359,
+            mmpu: 13892404,
+            dmpu: 13892360,
+        },
+        {
+            sections: ['culture'],
+            lb: 13892361,
+            mmpu: 13892405,
+            dmpu: 13892362,
+        },
+        {
+            sections: ['uk', 'us', 'au'],
+            lb: 13892363,
+            mmpu: 13892406,
+            dmpu: 13892364,
+        },
+        {
+            sections: ['news'],
+            lb: 13892365,
+            mmpu: 13892407,
+            dmpu: 13892366,
+        },
+        {
+            sections: ['money'],
+            lb: 13892367,
+            mmpu: 13892408,
+            dmpu: 13892368,
+        },
+        {
+            sections: ['sport'],
+            lb: 13892372,
+            mmpu: 13892410,
+            dmpu: 13892373,
+        },
+        {
+            sections: ['lifeandstyle', 'fashion'],
+            lb: 13892411,
+            mmpu: 13892436,
+            dmpu: 13892437,
+        },
+        {
+            sections: ['technology', 'environment'],
+            lb: 13892376,
+            mmpu: 13892414,
+            dmpu: 13892377,
+        },
+        {
+            sections: ['travel'],
+            lb: 13892378,
+            mmpu: 13892415,
+            dmpu: 13892379,
+        },
+    ];
 
-type TestNameMap = { [string]: boolean };
+    const section: string = config.get('page.section', '').toLowerCase();
+    const placementIdsForSection: PangaeaSection = pangaeaList.find(
+        ({ sections }) => sections.includes(section)
+    ) || {
+        sections: ['other'],
+        lb: 13892369,
+        mmpu: 13892409,
+        dmpu: 13892370,
+    };
 
-const pbTestNameMap: () => TestNameMap = memoize(
-    (): TestNameMap =>
-        new URLSearchParams(window.location.search)
-            .getAll('pbtest')
-            .reduce((acc, value) => {
-                acc[value] = true;
-                return acc;
-            }, {}),
-    (): string =>
-        // Same implicit parameter as the memoized function
-        window.location.search
-);
+    const breakpointKey: string = getBreakpointKey();
+    // Mobile MPU
+    if (containsMpu(sizes) && breakpointKey === 'M')
+        return placementIdsForSection.mmpu;
+    // Double/Single MPU
+    if (containsMpuOrDmpu(sizes)) return placementIdsForSection.dmpu;
+    // Leaderboard/Billboard
+    if (containsLeaderboardOrBillboard(sizes)) return placementIdsForSection.lb;
+    return 13892409; // Other Section MPU as fallback
+};
 
 // Is pbtest being used?
 const isPbTestOn = (): boolean => !isEmpty(pbTestNameMap());
@@ -307,34 +328,38 @@ const inPbTestOr = (liveClause: boolean): boolean => isPbTestOn() || liveClause;
 const appNexusBidder: PrebidBidder = {
     name: 'and',
     switchName: 'prebidAppnexus',
-    bidParams: (): PrebidAppNexusParams => ({
-        placementId: getAppNexusDirectPlacementId(),
-        customData: buildAppNexusTargeting(buildPageTargeting()), // Ok to duplicate call. Lodash 'once' is used.
-    }),
+    bidParams: (slotId: string, sizes: PrebidSize[]): PrebidAppNexusParams =>
+        getAppNexusDirectBidParams(sizes, isInAuRegion()),
 };
 
 const openxClientSideBidder: PrebidBidder = {
     name: 'oxd',
     switchName: 'prebidOpenx',
     bidParams: (): PrebidOpenXParams => {
-        switch (config.get('page.edition')) {
-            case 'US':
-                return {
-                    delDomain: 'guardian-us-d.openx.net',
-                    unit: '540279544',
-                };
-            case 'AU':
-                return {
-                    delDomain: 'guardian-aus-d.openx.net',
-                    unit: '540279542',
-                };
-            default:
-                // UK and ROW
-                return {
-                    delDomain: 'guardian-d.openx.net',
-                    unit: '540279541',
-                };
+        if (isInUsRegion()) {
+            return {
+                delDomain: 'guardian-us-d.openx.net',
+                unit: '540279544',
+                customParams: buildAppNexusTargetingObject(
+                    buildPageTargeting()
+                ),
+            };
         }
+        if (isInAuRegion()) {
+            return {
+                delDomain: 'guardian-aus-d.openx.net',
+                unit: '540279542',
+                customParams: buildAppNexusTargetingObject(
+                    buildPageTargeting()
+                ),
+            };
+        }
+        // UK and ROW
+        return {
+            delDomain: 'guardian-d.openx.net',
+            unit: '540279541',
+            customParams: buildAppNexusTargetingObject(buildPageTargeting()),
+        };
     },
 };
 
@@ -354,13 +379,35 @@ const sonobiBidder: PrebidBidder = {
         ),
 };
 
+const getPubmaticPublisherId = (): string => {
+    if (isInUsRegion()) {
+        return '157206';
+    }
+    if (isInAuRegion()) {
+        return '157203';
+    }
+    return '157207';
+};
+
+const pubmaticBidder: PrebidBidder = {
+    name: 'pubmatic',
+    switchName: 'prebidPubmatic',
+    bidParams: (slotId: string): PrebidPubmaticParams =>
+        Object.assign(
+            {},
+            {
+                publisherId: getPubmaticPublisherId(),
+                adSlot: stripDfpAdPrefixFrom(slotId),
+            }
+        ),
+};
+
 const trustXBidder: PrebidBidder = {
     name: 'trustx',
     switchName: 'prebidTrustx',
     bidParams: (slotId: string): PrebidTrustXParams => ({
         uid: getTrustXAdUnitId(slotId, isDesktopAndArticle),
     }),
-    labelAll: ['geo-NA'],
 };
 
 const improveDigitalBidder: PrebidBidder = {
@@ -370,7 +417,6 @@ const improveDigitalBidder: PrebidBidder = {
         placementId: getImprovePlacementId(sizes),
         size: getImproveSizeParam(slotId),
     }),
-    labelAny: ['edn-UK', 'edn-INT'],
 };
 
 const xaxisBidder: PrebidBidder = {
@@ -379,14 +425,13 @@ const xaxisBidder: PrebidBidder = {
     bidParams: (slotId: string, sizes: PrebidSize[]): PrebidXaxisParams => ({
         placementId: getXaxisPlacementId(sizes),
     }),
-    labelAll: ['edn-UK', 'deal-FirstLook'],
 };
 
 const adYouLikeBidder: PrebidBidder = {
     name: 'adyoulike',
     switchName: 'prebidAdYouLike',
     bidParams: (): PrebidAdYouLikeParams => ({
-        placement: getAdYouLikePlacementId(),
+        placement: '2b4d757e0ec349583ce704699f1467dd',
     }),
 };
 
@@ -405,7 +450,9 @@ const getDummyServerSideBidders = (): Array<PrebidBidder> => {
                 {},
                 {
                     placementId: getAppNexusPlacementId(sizes),
-                    customData: buildAppNexusTargeting(buildPageTargeting()), // Ok to duplicate call. Lodash 'once' is used.
+                    keywords: buildAppNexusTargetingObject(
+                        buildPageTargeting()
+                    ), // Ok to duplicate call. Lodash 'once' is used.
                 },
                 window.OzoneLotameData ? { lotame: window.OzoneLotameData } : {}
             ),
@@ -417,42 +464,46 @@ const getDummyServerSideBidders = (): Array<PrebidBidder> => {
         bidParams: (): PrebidOpenXParams =>
             Object.assign(
                 {},
-                (() => {
-                    switch (config.get('page.edition')) {
-                        case 'UK':
-                            return {
-                                delDomain: 'guardian-d.openx.net',
-                                unit: '539997090',
-                            };
-                        case 'US':
-                            return {
-                                delDomain: 'guardian-us-d.openx.net',
-                                unit: '539997087',
-                            };
-                        default:
-                            // AU and rest
-                            return {
-                                delDomain: 'guardian-aus-d.openx.net',
-                                unit: '539997046',
-                            };
-                    }
-                })(),
+                (() => ({
+                    delDomain: 'guardian-d.openx.net',
+                    unit: '539997090',
+                    customParams: buildAppNexusTargetingObject(
+                        buildPageTargeting()
+                    ),
+                }))(),
                 window.OzoneLotameData ? { lotame: window.OzoneLotameData } : {}
             ),
     };
 
-    // Experimental. Only 0.01% of the PVs.
+    const pangaeaServerSideBidder: PrebidBidder = {
+        name: 'pangaea',
+        switchName: 'prebidS2sozone',
+        bidParams: (
+            slotId: string,
+            sizes: PrebidSize[]
+        ): PrebidAppNexusParams =>
+            Object.assign(
+                {},
+                {
+                    placementId: getPangaeaPlacementId(sizes).toString(),
+                    keywords: buildAppNexusTargetingObject(
+                        buildPageTargeting()
+                    ), // Ok to duplicate call. Lodash 'once' is used.
+                },
+                window.OzoneLotameData ? { lotame: window.OzoneLotameData } : {}
+            ),
+    };
+
     if (
         inPbTestOr(
-            config.get('switches.prebidS2sozone') &&
-                getRandomIntInclusive(1, 10000) === 1
+            config.get('switches.prebidS2sozone') && shouldIncludeOzone()
         )
     ) {
         dummyServerSideBidders.push(openxServerSideBidder);
-        if (inPbTestOr(!isExcludedGeolocation())) {
-            dummyServerSideBidders.push(appnexusServerSideBidder);
-        }
+        dummyServerSideBidders.push(appnexusServerSideBidder);
+        dummyServerSideBidders.push(pangaeaServerSideBidder);
     }
+
     return dummyServerSideBidders;
 };
 
@@ -480,12 +531,17 @@ const biddersSwitchedOn: (PrebidBidder[]) => PrebidBidder[] = allBidders => {
 
 const currentBidders: (PrebidSize[]) => PrebidBidder[] = slotSizes => {
     const otherBidders: PrebidBidder[] = [
-        sonobiBidder,
+        ...(inPbTestOr(shouldIncludeSonobi()) ? [sonobiBidder] : []),
         ...(inPbTestOr(shouldIncludeTrustX()) ? [trustXBidder] : []),
         ...(inPbTestOr(shouldIncludeAppNexus()) ? [appNexusBidder] : []),
-        improveDigitalBidder,
-        xaxisBidder,
-        ...(shouldIncludeAdYouLike(slotSizes) ? [adYouLikeBidder] : []),
+        ...(inPbTestOr(shouldIncludeImproveDigital())
+            ? [improveDigitalBidder]
+            : []),
+        ...(inPbTestOr(shouldIncludeXaxis()) ? [xaxisBidder] : []),
+        pubmaticBidder,
+        ...(inPbTestOr(shouldIncludeAdYouLike(slotSizes))
+            ? [adYouLikeBidder]
+            : []),
         ...(shouldIncludeOpenx() ? [openxClientSideBidder] : []),
     ];
 
@@ -501,26 +557,12 @@ export const bids: (string, PrebidSize[]) => PrebidBid[] = (
     slotId,
     slotSizes
 ) =>
-    currentBidders(slotSizes).map((bidder: PrebidBidder) => {
-        const bid: PrebidBid = {
-            bidder: bidder.name,
-            params: bidder.bidParams(slotId, slotSizes),
-        };
-        if (!isPbTestOn()) {
-            // Label filtering only when not in test mode.
-            if (bidder.labelAny) {
-                bid.labelAny = bidder.labelAny;
-            }
-            if (bidder.labelAll) {
-                bid.labelAll = bidder.labelAll;
-            }
-        }
-        return bid;
-    });
+    currentBidders(slotSizes).map((bidder: PrebidBidder) => ({
+        bidder: bidder.name,
+        params: bidder.bidParams(slotId, slotSizes),
+    }));
 
 export const _ = {
-    getAdYouLikePlacementId,
-    getAppNexusPlacementId,
     getDummyServerSideBidders,
     getIndexSiteId,
     getImprovePlacementId,

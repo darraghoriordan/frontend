@@ -354,6 +354,7 @@
     @include fs-headline(2);
     margin-bottom: $gs-baseline/2;
     color: $brightness-46;
+    z-index: 1;
 
     @include mq(tablet) {
         @include font-size(18px, 22px);
@@ -987,10 +988,10 @@
             color: $brightness-46;
 
             a {
-                color: $guardian-brand;
+                color: $brand-main;
 
                 &:hover {
-                    border-bottom-color: $guardian-brand;
+                    border-bottom-color: $brand-main;
                 }
             }
         }

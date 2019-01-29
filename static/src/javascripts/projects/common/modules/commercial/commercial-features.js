@@ -7,25 +7,30 @@ import userPrefs from 'common/modules/user-prefs';
 
 // Having a constructor means we can easily re-instantiate the object in a test
 class CommercialFeatures {
-    dfpAdvertising: any;
-    stickyTopBannerAd: any;
-    articleBodyAdverts: any;
-    articleAsideAdverts: any;
-    carrotTrafficDriver: any;
-    videoPreRolls: any;
-    highMerch: any;
-    thirdPartyTags: any;
-    outbrain: any;
-    commentAdverts: any;
-    liveblogAdverts: any;
-    paidforBand: any;
-    asynchronous: any;
-    adFree: any;
+    dfpAdvertising: boolean;
+    stickyTopBannerAd: boolean;
+    articleBodyAdverts: boolean;
+    articleAsideAdverts: boolean;
+    carrotTrafficDriver: boolean;
+    videoPreRolls: boolean;
+    highMerch: boolean;
+    thirdPartyTags: boolean;
+    outbrain: boolean;
+    commentAdverts: boolean;
+    liveblogAdverts: boolean;
+    paidforBand: boolean;
+    asynchronous: boolean;
+    adFree: boolean;
 
     constructor(config: any = defaultConfig) {
         // this is used for SpeedCurve tests
-        const noadsUrl = window.location.hash.match(/[#&]noads(&.*)?$/);
-        const forceAdFree = window.location.hash.match(/[#&]noadsaf(&.*)?$/);
+        const noadsUrl: boolean = /[#&]noads(&.*)?$/.test(window.location.hash);
+        const forceAdFree: boolean = /[#&]noadsaf(&.*)?$/.test(
+            window.location.hash
+        );
+        const forceAds: boolean = /[?&]forceads(&.*)?$/.test(
+            window.location.search
+        );
         const externalAdvertising = !noadsUrl && !userPrefs.isOff('adverts');
         const sensitiveContent =
             config.page.shouldHideAdverts ||
@@ -55,10 +60,11 @@ class CommercialFeatures {
         this.adFree = !!forceAdFree || isAdFreeUser();
 
         this.dfpAdvertising =
-            switches.commercial &&
-            externalAdvertising &&
-            !sensitiveContent &&
-            !isIdentityPage;
+            forceAds ||
+            (switches.commercial &&
+                externalAdvertising &&
+                !sensitiveContent &&
+                !isIdentityPage);
 
         this.stickyTopBannerAd =
             !this.adFree &&

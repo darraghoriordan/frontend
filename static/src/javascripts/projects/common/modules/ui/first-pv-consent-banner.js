@@ -42,15 +42,15 @@ const links: Links = {
 const template: Template = {
     heading: `Your privacy`,
     consentText: [
-        `We use cookies to improve your experience on our site and to show you relevant&nbsp;advertising.`,
-        `To find out more, read our updated <a class="u-underline" data-link-name="first-pv-consent : to-privacy" href="${
+        `We use cookies to improve your experience on our site and to show you personalised advertising.`,
+        `To find out more, read our <a class="u-underline" data-link-name="first-pv-consent : to-privacy" href="${
             links.privacy
         }">privacy policy</a> and <a class="u-underline" data-link-name="first-pv-consent : to-cookies" href="${
             links.cookies
         }">cookie policy</a>.`,
     ],
-    agreeButton: 'OK',
-    choicesButton: 'More information',
+    agreeButton: "I'm OK with that",
+    choicesButton: 'My options',
     linkToPreferences: `${config.get('page.idUrl')}/privacy-settings`,
 };
 
@@ -67,15 +67,15 @@ const makeHtml = (): string => `
         .join('')}
     </div>
     <div class="site-message--first-pv-consent__actions">
-        <button 
-            data-link-name="first-pv-consent : agree" 
+        <button
+            data-link-name="first-pv-consent : agree"
             class="site-message--first-pv-consent__button site-message--first-pv-consent__button--main ${
                 bindableClassNames.agree
             }"
         >${checkIcon.markup}<span>${template.agreeButton}</span></button>
-        <a 
-            href="${template.linkToPreferences}" 
-            data-link-name="first-pv-consent : to-prefs" 
+        <a
+            href="${template.linkToPreferences}"
+            data-link-name="first-pv-consent : to-prefs"
             class="site-message--first-pv-consent__link u-underline"
         >${template.choicesButton}</a>
     </div>
@@ -116,11 +116,11 @@ const track = (): void => {
 };
 
 const bindClickHandlers = (msg: Message): void => {
-    [...document.querySelectorAll(`.${bindableClassNames.agree}`)].forEach(
-        agreeButtonEl => {
-            agreeButtonEl.addEventListener('click', () => onAgree(msg));
-        }
-    );
+    Array.from(
+        document.querySelectorAll(`.${bindableClassNames.agree}`)
+    ).forEach(agreeButtonEl => {
+        agreeButtonEl.addEventListener('click', () => onAgree(msg));
+    });
 };
 
 const show = (): Promise<boolean> => {

@@ -3,26 +3,26 @@ package controllers
 import com.gu.contentapi.client.model.v1.{ItemResponse, Content => ApiContent}
 import common._
 import contentapi.ContentApiClient
-import model.{ContentType, PageWithStoryPackage, _}
-import pages.{ArticleEmailHtmlPage, ArticleHtmlPage}
-import play.api.libs.ws.WSClient
-import play.api.mvc._
-import views.support._
-import metrics.TimingMetric
-import play.api.libs.json.Json
-import renderers.RemoteRender
-import services.{CAPILookup, RemoteRender, RenderingTierPicker}
 import implicits.{AmpFormat, EmailFormat, HtmlFormat, JsonFormat}
 import model.Cached.{RevalidatableResult, WithoutRevalidationResult}
+import model.dotcomponents.DotcomponentsDataModel
+import model.{ContentType, PageWithStoryPackage, _}
+import pages.{ArticleEmailHtmlPage, ArticleHtmlPage}
+import play.api.libs.json.Json
+import play.api.libs.ws.WSClient
+import play.api.mvc._
+import renderers.RemoteRenderer
+import services.CAPILookup
+import services.dotcomponents._
+import views.support._
 
 import scala.concurrent.Future
 
 case class ArticlePage(article: Article, related: RelatedContent) extends PageWithStoryPackage
 
-class ArticleController(contentApiClient: ContentApiClient, val controllerComponents: ControllerComponents, ws: WSClient)(implicit context: ApplicationContext) extends BaseController with RendersItemResponse with Logging with ImplicitControllerExecutionContext {
+class ArticleController(contentApiClient: ContentApiClient, val controllerComponents: ControllerComponents, ws: WSClient, remoteRenderer: renderers.RemoteRenderer = RemoteRenderer(), renderingTierPicker: RenderingTierPicker = RenderingTierPicker())(implicit context: ApplicationContext) extends BaseController with RendersItemResponse with Logging with ImplicitControllerExecutionContext {
 
   val capiLookup: CAPILookup = new CAPILookup(contentApiClient)
-  val remoteRender: RemoteRender = new RemoteRender()
 
   private def isSupported(c: ApiContent) = c.isArticle || c.isLiveBlog || c.isSudoku
   override def canRender(i: ItemResponse): Boolean = i.content.exists(isSupported)
@@ -38,9 +38,13 @@ class ArticleController(contentApiClient: ContentApiClient, val controllerCompon
 
   def renderArticle(path: String): Action[AnyContent] = {
     Action.async { implicit request =>
-        mapModel(path, ArticleBlocks) {
-          if(request.isGuui) remoteRender.render(ws, path, _) else render(path, _)
+      mapModel(path, ArticleBlocks)( article => {
+        renderingTierPicker.getTier(article) match {
+          case RemoteRender => remoteRenderer.getArticle(ws, path, article)
+          case RemoteRenderAMP => remoteRenderer.getAMPArticle(ws, path, article)
+          case LocalRender => render(path, article)
         }
+      })
     }
   }
 
@@ -69,28 +73,25 @@ class ArticleController(contentApiClient: ContentApiClient, val controllerCompon
   }
 
   private def getJson(article: ArticlePage)(implicit request: RequestHeader) = {
-    val contentFieldsJson = if (request.isGuuiJson) List("contentFields" -> Json.toJson(ContentFields(article.article))) else List()
+    val contentFieldsJson = if (request.isGuuiJson) List(
+      "contentFields" -> Json.toJson(ContentFields(article.article)),
+      "tags" -> Json.toJson(article.article.tags)) else List()
     List(("html", views.html.fragments.articleBody(article))) ++ contentFieldsJson
   }
 
+  private def getGuuiJson(article: ArticlePage)(implicit request: RequestHeader): String =
+    DotcomponentsDataModel.toJsonString(DotcomponentsDataModel.fromArticle(article, request))
+
   private def render(path: String, article: ArticlePage)(implicit request: RequestHeader): Future[Result] = {
-
-    val renderTier = RenderingTierPicker.getRenderTierFor(article)
-
-    renderTier match {
-      case RemoteRender => log.logger.info(s"Remotely renderable article $path");
-      case _ =>
-    }
-
     Future {
       request.getRequestFormat match {
+        case JsonFormat if request.isGuui => common.renderJson(getGuuiJson(article), article).as("application/json")
         case JsonFormat => common.renderJson(getJson(article), article)
         case EmailFormat => common.renderEmail(ArticleEmailHtmlPage.html(article), article)
         case HtmlFormat => common.renderHtml(ArticleHtmlPage.html(article), article)
         case AmpFormat => common.renderHtml(views.html.articleAMP(article), article)
       }
     }
-
   }
 
   private def mapModel(path: String, range: BlockRange)(render: ArticlePage => Future[Result])(implicit request: RequestHeader): Future[Result] = {
@@ -108,7 +109,7 @@ class ArticleController(contentApiClient: ContentApiClient, val controllerCompon
     val supportedContent: Option[ContentType] = response.content.filter(isSupported).map(Content(_))
 
     ModelOrResult(supportedContent, response) match {
-      case Left(article:Article) => Left(ArticlePage(article, StoryPackages(article, response)))
+      case Left(article:Article) => Left(ArticlePage(article, StoryPackages(article.metadata.id, response)))
       case Right(r) => Right(r)
       case _ => Right(NotFound)
     }

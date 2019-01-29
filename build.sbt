@@ -48,13 +48,15 @@ val common = library("common").settings(
     scalaUri,
     commercialShared,
     playJson,
+    playJsonExtensions,
     playJsonJoda,
     jodaForms,
     jacksonDataFormat,
     atomRenderer,
     identityModel,
     capiAws,
-    okhttp
+    okhttp,
+    jsonSchema
   )
 ).settings(
     mappings in TestAssets ~= filterAssets

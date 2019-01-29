@@ -6,13 +6,7 @@ import $ from 'lib/$';
 import config from 'lib/config';
 import { markTime } from 'lib/user-timing';
 import { catchErrorsWithContext } from 'lib/robust';
-import { segmentUser, run as abRun } from 'common/modules/experiments/ab';
-import { getActiveTests } from 'common/modules/experiments/ab-tests';
-import {
-    registerImpressionEvents,
-    registerCompleteEvents,
-    trackABTests,
-} from 'common/modules/experiments/ab-ophan';
+import { runAndTrackAbTests } from 'common/modules/experiments/ab';
 import { initSport } from 'bootstraps/enhanced/sport';
 import { trackPerformance } from 'common/modules/analytics/google';
 import { init as geolocationInit } from 'lib/geolocation';
@@ -52,31 +46,14 @@ const bootEnhanced = (): void => {
         [
             'ab-tests',
             () => {
-                const tests = getActiveTests();
-                segmentUser();
-
                 catchErrorsWithContext([
                     [
                         'ab-tests-run',
                         () => {
-                            abRun(tests);
-                        },
-                    ],
-                    [
-                        'ab-tests-registerImpressionEvents',
-                        () => {
-                            registerImpressionEvents(tests);
-                        },
-                    ],
-                    [
-                        'ab-tests-registerCompleteEvents',
-                        () => {
-                            registerCompleteEvents(tests);
+                            runAndTrackAbTests();
                         },
                     ],
                 ]);
-
-                trackABTests();
             },
         ],
 
@@ -337,8 +314,19 @@ const bootEnhanced = (): void => {
                 window.location.hash.indexOf('force-sw') > -1
             ) {
                 const navigator = window.navigator;
+
                 if (navigator && navigator.serviceWorker) {
-                    navigator.serviceWorker.register('/service-worker.js');
+                    if (config.get('switches.serviceWorkerEnabled')) {
+                        navigator.serviceWorker.register('/service-worker.js');
+                    } else {
+                        navigator.serviceWorker
+                            .getRegistrations()
+                            .then(registrations => {
+                                [...registrations].forEach(registration => {
+                                    registration.unregister();
+                                });
+                            });
+                    }
                 }
             }
 

@@ -57,7 +57,9 @@
  */
 
 .top-banner-ad-container {
-    background-color: $brightness-97;
+    background-color: $brightness-100;
+    border-bottom: 1px solid $brightness-86;
+
     // Needed for compatibility with IE11/Edge.
     top: 0;
 
@@ -92,10 +94,6 @@
     text-align: center;
 
     .ad-slot__label {
-        border-top: 0;
-        padding: 0;
-        height: $gs-row-height/2;
-
         @include mq(wide) {
             margin: 0;
         }
@@ -229,7 +227,7 @@
     }
 }
 
-.ad-slot--container-inline:not(.ad-slot--fluid):not(.ad-slot--gc) {
+.ad-slot--container-inline:not(.ad-slot--fluid):not(.ad-slot--gc):not(.ad-slot--mostpop) {
     .ad-slot__content {
         margin: 0 auto;
     }
@@ -383,7 +381,7 @@
     padding: 0;
     margin: 0;
 
-    &:not(.ad-slot--im):not(.ad-slot--carrot) {
+    &:not(.ad-slot--im):not(.ad-slot--carrot):not(.ad-slot--offset-right) {
         width: 100%;
     }
 

@@ -1,10 +1,10 @@
 // @flow strict
 
+import once from 'lodash/once';
 import { getBreakpoint } from 'lib/detect';
+import { pbTestNameMap } from 'lib/url';
 import { getSync as geolocationGetSync } from 'lib/geolocation';
-import { commercialPrebidAdYouLike } from 'common/modules/experiments/tests/commercial-prebid-adyoulike';
-import { testCanBeRun } from 'common/modules/experiments/test-can-run-checks';
-import { getParticipations } from 'common/modules/experiments/utils';
+import config from 'lib/config';
 import type { PrebidSize } from './types';
 
 const stripSuffix = (s: string, suffix: string): string => {
@@ -12,8 +12,39 @@ const stripSuffix = (s: string, suffix: string): string => {
     return s.replace(re, '');
 };
 
+const currentGeoLocation = once((): string => geolocationGetSync());
+
 const contains = (sizes: PrebidSize[], size: PrebidSize): boolean =>
     Boolean(sizes.find(s => s[0] === size[0] && s[1] === size[1]));
+
+const stripPrefix = (s: string, prefix: string): string => {
+    const re = new RegExp(`^${prefix}`);
+    return s.replace(re, '');
+};
+
+export const removeFalseyValues = (o: {
+    [string]: string,
+}): { [string]: string } =>
+    Object.keys(o).reduce((m: { [string]: string }, k: string) => {
+        if (o[k]) {
+            m[k] = o[k];
+        }
+        return m;
+    }, {});
+
+export const stripDfpAdPrefixFrom = (s: string): string =>
+    stripPrefix(s, 'dfp-ad--');
+
+export const isInUkRegion = (): boolean => currentGeoLocation() === 'GB';
+
+export const isInUsRegion = (): boolean =>
+    ['US', 'CA'].includes(currentGeoLocation());
+
+export const isInAuRegion = (): boolean =>
+    ['AU', 'NZ'].includes(currentGeoLocation());
+
+export const isInRowRegion = (): boolean =>
+    !isInUkRegion() && !isInUsRegion() && !isInAuRegion();
 
 export const containsMpu = (sizes: PrebidSize[]): boolean =>
     contains(sizes, [300, 250]);
@@ -33,6 +64,16 @@ export const containsMpuOrDmpu = (sizes: PrebidSize[]): boolean =>
 export const containsLeaderboardOrBillboard = (sizes: PrebidSize[]): boolean =>
     containsLeaderboard(sizes) || containsBillboard(sizes);
 
+export const getLargestSize = (sizes: PrebidSize[]): PrebidSize | null => {
+    const reducer = (previous: PrebidSize, current: PrebidSize) => {
+        if (previous[0] >= current[0] && previous[1] >= current[1]) {
+            return previous;
+        }
+        return current;
+    };
+    return sizes.length > 0 ? sizes.reduce(reducer) : null;
+};
+
 export const getBreakpointKey = (): string => {
     switch (getBreakpoint()) {
         case 'mobile':
@@ -51,37 +92,6 @@ export const getBreakpointKey = (): string => {
     }
 };
 
-export const shouldIncludeAppNexus = (): boolean =>
-    geolocationGetSync() === 'AU';
-
-export const shouldIncludeOpenx = (): boolean =>
-    !['US', 'CA', 'AU', 'NZ'].includes(geolocationGetSync());
-
-export const shouldIncludeTrustX = (): boolean => geolocationGetSync() === 'US';
-
-export const shouldIncludeAdYouLike = (slotSizes: PrebidSize[]): boolean => {
-    const test = commercialPrebidAdYouLike;
-    const participations = getParticipations();
-    return (
-        testCanBeRun(test) &&
-        participations !== undefined &&
-        participations[test.id] !== undefined &&
-        participations[test.id].variant !== 'notintest' &&
-        containsMpu(slotSizes)
-    );
-};
-
-export const isExcludedGeolocation = (): boolean => {
-    const excludedGeos = ['US', 'CA', 'NZ', 'AU'];
-    return excludedGeos.includes(geolocationGetSync());
-};
-
-export const stripMobileSuffix = (s: string): string =>
-    stripSuffix(s, '--mobile');
-
-export const stripTrailingNumbersAbove1 = (s: string): string =>
-    stripSuffix(s, '([2-9]|\\d{2,})');
-
 export const getRandomIntInclusive = (
     minimum: number,
     maximum: number
@@ -90,3 +100,34 @@ export const getRandomIntInclusive = (
     const max = Math.floor(maximum);
     return Math.floor(Math.random() * (max - min + 1)) + min;
 };
+
+export const shouldIncludeSonobi = (): boolean => isInUsRegion();
+
+export const shouldIncludeOpenx = (): boolean => !isInUsRegion();
+
+export const shouldIncludeTrustX = (): boolean => isInUsRegion();
+
+export const shouldIncludeAdYouLike = (slotSizes: PrebidSize[]): boolean =>
+    containsMpu(slotSizes);
+
+export const shouldIncludeOzone = (): boolean =>
+    !isInUsRegion() && !isInAuRegion();
+
+export const shouldIncludeAppNexus = (): boolean =>
+    isInAuRegion() ||
+    ((config.get('switches.prebidAppnexusUkRow') && !isInUsRegion()) ||
+        !!pbTestNameMap().and);
+
+export const shouldIncludeXaxis = (): boolean =>
+    // 10% of UK page views
+    isInUkRegion() &&
+    (config.get('page.isDev', true) || getRandomIntInclusive(1, 10) === 1);
+
+export const shouldIncludeImproveDigital = (): boolean =>
+    isInUkRegion() || isInRowRegion();
+
+export const stripMobileSuffix = (s: string): string =>
+    stripSuffix(s, '--mobile');
+
+export const stripTrailingNumbersAbove1 = (s: string): string =>
+    stripSuffix(s, '([2-9]|\\d{2,})');

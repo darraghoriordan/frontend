@@ -137,7 +137,7 @@ import collection.JavaConverters._
 
         And("I should see the image url")
         el("[itemprop='associatedMedia image'] [itemprop=url]").attribute("content") should
-          include("/img/static/sys-images/Guardian/Pix/pictures/2012/8/6/1344274684805/Gunnerside-village-Swaled-009.jpg?width=700&quality=85&auto=format&usm=12&fit=max&s=")
+          include("/img/static/sys-images/Guardian/Pix/pictures/2012/8/6/1344274684805/Gunnerside-village-Swaled-009.jpg?width=700&quality=85&auto=format&fit=max&s=")
 
         And("I should see the image width")
         el("[itemprop='associatedMedia image'] [itemprop=width]").attribute("content") should be("460")
@@ -405,7 +405,7 @@ import collection.JavaConverters._
 
         And("video meta thumbnailUrl should be set")
         $("[itemprop='associatedMedia video'] [itemprop=thumbnailUrl]").attribute("content") should
-          include("img/static/sys-images/Guardian/Pix/audio/video/2014/5/16/1400240928538/Nigel-Farage-LBC-debate-i-014.jpg?width=640&height=360&quality=85&auto=format&usm=12&fit=max&s=")
+          include("img/static/sys-images/Guardian/Pix/audio/video/2014/5/16/1400240928538/Nigel-Farage-LBC-debate-i-014.jpg?width=640&quality=85&auto=format&fit=max&s=")
 
         And("video meta uploadDate should be set")
         $("[itemprop='associatedMedia video'] [itemprop=uploadDate]").attribute("content") should be("2014-05-16T16:09:34.000+01:00")
@@ -470,14 +470,12 @@ import collection.JavaConverters._
         val mailShareUrl = "mailto:?subject=Mark%20Kermode's%20DVD%20round-up&body=https%3A%2F%2Fwww.theguardian.com%2Ffilm%2F2012%2Fnov%2F11%2Fmargin-call-cosmopolis-friends-with-kids-dvd-review%3FCMP%3Dshare_btn_link"
         val fbShareUrl = "https://www.facebook.com/dialog/share?app_id=202314643182694&href=https%3A%2F%2Fwww.theguardian.com%2Ffilm%2F2012%2Fnov%2F11%2Fmargin-call-cosmopolis-friends-with-kids-dvd-review%3FCMP%3Dshare_btn_fb"
         val twitterShareUrl = "https://twitter.com/intent/tweet?text=Mark%20Kermode's%20DVD%20round-up&url=https%3A%2F%2Fwww.theguardian.com%2Ffilm%2F2012%2Fnov%2F11%2Fmargin-call-cosmopolis-friends-with-kids-dvd-review%3FCMP%3Dshare_btn_tw"
-        val gplusShareUrl = "https://plus.google.com/share?url=https%3A%2F%2Fwww.theguardian.com%2Ffilm%2F2012%2Fnov%2F11%2Fmargin-call-cosmopolis-friends-with-kids-dvd-review%3FCMP%3Dshare_btn_gp&amp;hl=en-GB&amp;wwc=1"
 
         Then("I should see buttons for my favourite social network")
 
         $(".social__item[data-link-name=email] .social__action").attribute("href") should be(mailShareUrl)
         $(".social__item[data-link-name=facebook] .social__action").attribute("href") should be(fbShareUrl)
         $(".social__item[data-link-name=twitter] .social__action").attribute("href") should be(twitterShareUrl)
-        $(".social__item[data-link-name=gplus] .social__action").attribute("href") should be(gplusShareUrl)
       }
     }
 
@@ -492,8 +490,6 @@ import collection.JavaConverters._
         import browser._
 
         Then("I should see the main ARIA roles described")
-        $(".related").attribute("role") should be("complementary")
-        $("aside").attribute("role") should be("complementary")
         $("header").attribute("role") should be("banner")
         $(".l-footer__secondary").attribute("role") should be("contentinfo")
         $("nav").attribute("aria-label") should not be empty
@@ -543,7 +539,7 @@ import collection.JavaConverters._
         import browser._
 
         Then("I should see links to keywords")
-        $(".submeta__link").size should be(7)
+        $(".submeta__link").size should be(8)
       }
     }
 

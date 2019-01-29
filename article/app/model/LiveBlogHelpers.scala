@@ -77,7 +77,7 @@ object LiveBlogHelpers {
         content = liveBlog.content.copy(
           metadata = liveBlog.content.metadata.copy(
             cacheTime = cacheTime)))
-      Left(LiveBlogPage(liveBlogCache, pageModel, StoryPackages(liveBlog, response)))
+      Left(LiveBlogPage(liveBlogCache, pageModel, StoryPackages(liveBlog.metadata.id, response)))
 
     }.getOrElse(Right(NotFound))
 
@@ -112,7 +112,7 @@ object LiveBlogHelpers {
     val textBlocks = firstPageBlocks
       .take(number)
       .collect {
-        case BodyBlock(id, html, summary, title, _, _, _, publishedAt, _, updatedAt, _, _) if html.trim.nonEmpty =>
+        case BodyBlock(id, html, summary, title, _, _, _, publishedAt, _, updatedAt, _, _, _) if html.trim.nonEmpty =>
           TextBlock(id, title, publishedAt, updatedAt, summary)
       }
 

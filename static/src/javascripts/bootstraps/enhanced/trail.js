@@ -16,6 +16,7 @@ import { related } from 'common/modules/onward/related';
 import { TonalComponent } from 'common/modules/onward/tonal';
 import { loadShareCounts } from 'common/modules/social/share-count';
 import { onwardVideo } from 'common/modules/video/onward-container';
+import { onwardAudio } from 'common/modules/audio/onward-container';
 import { moreInSeriesContainerInit } from 'common/modules/video/more-in-series-container';
 
 const initMoreInSection = (): void => {
@@ -115,6 +116,12 @@ const initOnwardVideoContainer = (): void => {
     });
 };
 
+const initOnwardAudioContainer = (): void => {
+    if (config.get('page.contentType') === 'Audio') {
+        $('.js-audio-components-container').each(el => onwardAudio(el));
+    }
+};
+
 const initOnwardContent = () => {
     insertOrProximity('.js-onward', () => {
         if (
@@ -124,9 +131,9 @@ const initOnwardContent = () => {
             new OnwardContent(qwery('.js-onward'));
         } else if (config.get('page.tones', '') !== '') {
             fastdom
-                .read(() => document.querySelectorAll('.js-onward'))
+                .read(() => Array.from(document.querySelectorAll('.js-onward')))
                 .then(els => {
-                    [...els].forEach(c => {
+                    els.forEach(c => {
                         new TonalComponent().fetch(c, 'html');
                     });
                 });
@@ -134,6 +141,7 @@ const initOnwardContent = () => {
     });
 
     initOnwardVideoContainer();
+    initOnwardAudioContainer();
 };
 
 const initDiscussion = () => {

@@ -31,6 +31,7 @@ const forcedAdFreeMode: boolean = !!window.location.hash.match(
 
 const userHasData = (): boolean => {
     const cookie =
+        getCookie(ACTION_REQUIRED_FOR_COOKIE) ||
         getCookie(USER_FEATURES_EXPIRY_COOKIE) ||
         getCookie(PAYING_MEMBER_COOKIE) ||
         getCookie(RECURRING_CONTRIBUTOR_COOKIE) ||
@@ -54,7 +55,6 @@ const timeInDaysFromNow = (daysFromNow: number): string => {
 };
 
 const persistResponse = (JsonResponse: () => void) => {
-    const switches = config.switches;
     addCookie(USER_FEATURES_EXPIRY_COOKIE, timeInDaysFromNow(1));
     addCookie(PAYING_MEMBER_COOKIE, JsonResponse.contentAccess.paidMember);
     addCookie(
@@ -71,20 +71,16 @@ const persistResponse = (JsonResponse: () => void) => {
         addCookie(ACTION_REQUIRED_FOR_COOKIE, JsonResponse.alertAvailableFor);
     }
 
-    if (switches.adFreeEmergencyShutdown) {
+    if (
+        adFreeDataIsPresent() &&
+        !forcedAdFreeMode &&
+        !JsonResponse.contentAccess.digitalPack
+    ) {
         removeCookie(AD_FREE_USER_COOKIE);
-    } else {
-        if (
-            adFreeDataIsPresent() &&
-            !JsonResponse.adFree &&
-            !forcedAdFreeMode &&
-            !JsonResponse.contentAccess.digitalPack
-        ) {
-            removeCookie(AD_FREE_USER_COOKIE);
-        }
-        if (JsonResponse.adFree || JsonResponse.contentAccess.digitalPack) {
-            addCookie(AD_FREE_USER_COOKIE, timeInDaysFromNow(2));
-        }
+    }
+
+    if (JsonResponse.contentAccess.digitalPack) {
+        addCookie(AD_FREE_USER_COOKIE, timeInDaysFromNow(2));
     }
 };
 
@@ -161,7 +157,7 @@ const isPayingMember = (): boolean =>
 
 // number returned is Epoch time in milliseconds.
 // null value signifies no last contribution date.
-const getLastOneOffContributionDate = (): ?number => {
+const getLastOneOffContributionDate = (): number | null => {
     const cookie = getCookie(SUPPORT_ONE_OFF_CONTRIBUTION_COOKIE);
 
     if (!cookie) {
@@ -189,9 +185,9 @@ const getLastOneOffContributionDate = (): ?number => {
     return null;
 };
 
-const getDaysSinceLastOneOffContribution = (): ?number => {
+const getDaysSinceLastOneOffContribution = (): number | null => {
     const lastContributionDate = getLastOneOffContributionDate();
-    if (!lastContributionDate) {
+    if (lastContributionDate === null) {
         return null;
     }
     return dateDiffDays(lastContributionDate, Date.now());
@@ -200,7 +196,7 @@ const getDaysSinceLastOneOffContribution = (): ?number => {
 // in last six months
 const isRecentOneOffContributor = (): boolean => {
     const daysSinceLastContribution = getDaysSinceLastOneOffContribution();
-    if (!daysSinceLastContribution) {
+    if (daysSinceLastContribution === null) {
         return false;
     }
     return daysSinceLastContribution <= 180;
@@ -217,7 +213,9 @@ const isDigitalSubscriber = (): boolean =>
 /*
     Whenever the checks are updated, please make sure to update
     applyRenderConditions.scala.js too, where the global CSS class, indicating
-    the user should not see the revenue messages, is added to the body
+    the user should not see the revenue messages, is added to the body.
+    Please also update readerRevenueRelevantCookies below, if changing the cookies
+    which this function is dependent on.
 */
 const shouldSeeReaderRevenue = (): boolean =>
     !isPayingMember() &&
@@ -225,9 +223,22 @@ const shouldSeeReaderRevenue = (): boolean =>
     !isRecurringContributor() &&
     !isDigitalSubscriber();
 
+const readerRevenueRelevantCookies = [
+    PAYING_MEMBER_COOKIE,
+    DIGITAL_SUBSCRIBER_COOKIE,
+    RECURRING_CONTRIBUTOR_COOKIE,
+    SUPPORT_RECURRING_CONTRIBUTOR_MONTHLY_COOKIE,
+    SUPPORT_RECURRING_CONTRIBUTOR_ANNUAL_COOKIE,
+    SUPPORT_ONE_OFF_CONTRIBUTION_COOKIE,
+];
+
+// For debug/test purposes
+const fakeOneOffContributor = (): void => {
+    addCookie(SUPPORT_ONE_OFF_CONTRIBUTION_COOKIE, Date.now().toString());
+};
+
 const isAdFreeUser = (): boolean =>
-    !config.switches.adFreeEmergencyShutdown &&
-    (isDigitalSubscriber() || (adFreeDataIsPresent() && !adFreeDataIsOld()));
+    isDigitalSubscriber() || (adFreeDataIsPresent() && !adFreeDataIsOld());
 
 export {
     accountDataUpdateWarning,
@@ -241,4 +252,6 @@ export {
     deleteOldData,
     getLastOneOffContributionDate,
     getDaysSinceLastOneOffContribution,
+    readerRevenueRelevantCookies,
+    fakeOneOffContributor,
 };

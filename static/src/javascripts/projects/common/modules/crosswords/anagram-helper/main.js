@@ -5,7 +5,7 @@ import {
     cellsForClue,
     getAnagramClueData,
 } from 'common/modules/crosswords/helpers';
-import shuffle from 'lodash/collections/shuffle';
+import shuffle from 'lodash/shuffle';
 import { ClueInput } from './clue-input';
 import { CluePreview } from './clue-preview';
 import { Ring } from './ring';
@@ -44,7 +44,10 @@ class AnagramHelper extends Component<*, *> {
      *
      */
     // eslint-disable-next-line class-methods-use-this
-    shuffleWord(word: string, entries: { value: string }[]) {
+    shuffleWord(
+        word: string,
+        entries: { value: string }[]
+    ): Array<{ value: string, entered: boolean }> {
         const wordEntries = entries
             .map(entry => entry.value.toLowerCase())
             .filter(entry => word.includes(entry))

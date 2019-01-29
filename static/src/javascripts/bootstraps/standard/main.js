@@ -34,7 +34,7 @@ import { markTime } from 'lib/user-timing';
 import config from 'lib/config';
 import { newHeaderInit } from 'common/modules/navigation/new-header';
 import { trackPerformance } from 'common/modules/analytics/google';
-import debounce from 'lodash/functions/debounce';
+import debounce from 'lodash/debounce';
 import ophan from 'ophan/ng';
 import { initAtoms } from './atoms';
 
@@ -58,7 +58,7 @@ const showHiringMessage = (): void => {
                     '%cWe are hiring – ever thought about joining us? \n' +
                     '%chttps://workforus.theguardian.com/careers/digital-development%c \n' +
                     '\n',
-                'font-family: Georgia, serif; font-size: 32px; color: #005689',
+                'font-family: Georgia, serif; font-size: 32px; color: #052962',
                 'font-family: Georgia, serif; font-size: 16px; color: #767676',
                 'font-family: Helvetica Neue, sans-serif; font-size: 11px; text-decoration: underline; line-height: 1.2rem; color: #767676',
                 ''
@@ -203,11 +203,6 @@ const bootStandard = (): void => {
     // Set adtest query if url param declares it
     setAdTestCookie();
 
-    // If we flip the kill switch over ad-free, immediately remove the cookie
-    if (config.get('switches.adFreeEmergencyShutdown')) {
-        removeCookie('GU_AF1');
-    }
-
     // set a short-lived cookie to trigger server-side ad-freeness
     // if the user is genuinely ad-free, this one will be overwritten
     // in user-features
@@ -234,7 +229,11 @@ const bootStandard = (): void => {
         storage.set(key, alreadyVisited + 1);
     }
 
-    if (config.get('switches.blockIas') && navigator.serviceWorker) {
+    if (
+        config.get('switches.blockIas') &&
+        config.get('switches.serviceWorkerEnabled') &&
+        navigator.serviceWorker
+    ) {
         navigator.serviceWorker.ready.then(swreg => {
             const sw = swreg.active;
             const ias = window.location.hash.includes('noias');

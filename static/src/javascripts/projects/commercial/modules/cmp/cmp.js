@@ -1,10 +1,17 @@
 // @flow strict
 
-import { log } from 'commercial/modules/cmp/log';
-import { CmpStore } from 'commercial/modules/cmp/store';
+import config from 'lib/config';
 import { getCookie } from 'lib/cookies';
 import { getUrlVars } from 'lib/url';
-import { vendorList as globalVendorList } from 'commercial/modules/cmp/vendorlist';
+import fetchJSON from 'lib/fetch-json';
+
+import { commercialCmpCustomise } from 'common/modules/experiments/tests/commercial-cmp-customise';
+import { isInVariantSynchronous } from 'common/modules/experiments/ab';
+import { log } from './log';
+import { CmpStore } from './store';
+import { encodeVendorConsentData } from './cookie';
+import { shortVendorList as shortVendorListData } from './vendorlist';
+
 import {
     defaultConfig,
     CMP_GLOBAL_NAME,
@@ -12,15 +19,14 @@ import {
     CMP_VERSION,
     COOKIE_VERSION,
     COOKIE_NAME,
-} from 'commercial/modules/cmp/cmp-env';
-import { encodeVendorConsentData } from 'commercial/modules/cmp/cookie';
+} from './cmp-env';
 
 import type {
     CmpConfig,
     ConsentDataResponse,
     VendorList,
     VendorConsentResponse,
-} from 'commercial/modules/cmp/types';
+} from './types';
 
 type MessageData = {
     __cmpCall: ?{
@@ -56,6 +62,21 @@ const readConsentCookie = (cookieName: string): boolean | null => {
     return null;
 };
 
+const isInCmpCustomiseTest = (): boolean =>
+    isInVariantSynchronous(commercialCmpCustomise, 'variant');
+
+const generateStore = (isInTest: boolean): CmpStore => {
+    const store = new CmpStore(
+        CMP_ID,
+        CMP_VERSION,
+        COOKIE_VERSION,
+        readConsentCookie(COOKIE_NAME),
+        shortVendorListData,
+        isInTest
+    );
+    return store;
+};
+
 const isInEU = (): boolean =>
     (getCookie('GU_geo_continent') || 'OTHER').toUpperCase() === 'EU';
 
@@ -87,9 +108,9 @@ class CmpService {
     }
 
     generateConsentString = () => {
-        const { vendorConsentData, vendorList } = this.store;
+        const { vendorConsentData, shortVendorList } = this.store;
 
-        if (this.store.vendorConsentData && this.store.vendorList) {
+        if (this.store.vendorConsentData && this.store.shortVendorList) {
             log.info(
                 'GenerateConsentString: Persisted vendor consent data found'
             );
@@ -97,7 +118,7 @@ class CmpService {
             // TODO: Zero trust! we need to catch any errors, and log them...
             return encodeVendorConsentData({
                 ...vendorConsentData,
-                vendorList,
+                shortVendorList,
             });
         }
         // TODO: if the persisted data is missing we will need to generate it
@@ -137,14 +158,25 @@ class CmpService {
             vendorListVersion: number | null,
             callback: (res: VendorList | null, ok: boolean) => void = () => {}
         ): void => {
-            const { vendorList } = this.store;
-            const { vendorListVersion: listVersion } = vendorList || {};
-            // flowlint sketchy-null-number:warn
-            if (!vendorListVersion || vendorListVersion === listVersion) {
-                callback(vendorList, true);
-            } else {
-                callback(null, false);
-            }
+            fetchJSON(config.get('libs.cmp.fullVendorDataUrl'), {
+                mode: 'cors',
+            })
+                .then(vendorList => {
+                    const { vendorListVersion: listVersion } = vendorList || {};
+                    // flowlint sketchy-null-number:warn
+                    if (
+                        !vendorListVersion ||
+                        vendorListVersion === listVersion
+                    ) {
+                        callback(vendorList, true);
+                    } else {
+                        callback(null, false);
+                    }
+                })
+                .then(undefined, err => {
+                    log.error('ERROR fetching fullvendorlist: ', err);
+                    callback(null, false);
+                });
         },
 
         ping: (_: mixed, callback: CommandCallback = () => {}): void => {
@@ -181,7 +213,7 @@ class CmpService {
         } else {
             log.info(
                 `Proccess command: ${command}, parameter: ${parameter ||
-                    'unkonwn'}`
+                    'unknown'}`
             );
             this.commands[command](parameter, callback);
         }
@@ -253,14 +285,9 @@ export const init = (): void => {
     if (window[CMP_GLOBAL_NAME]) {
         // Pull queued commands from the CMP stub
         const { commandQueue = [] } = window[CMP_GLOBAL_NAME] || {};
+        const shouldAccessTestCookie = isInCmpCustomiseTest();
         // Initialize the store with all of our consent data
-        const store = new CmpStore(
-            CMP_ID,
-            CMP_VERSION,
-            COOKIE_VERSION,
-            readConsentCookie(COOKIE_NAME),
-            globalVendorList
-        );
+        const store = generateStore(shouldAccessTestCookie);
         const cmp = new CmpService(store);
         // Expose `processCommand` as the CMP implementation
         window[CMP_GLOBAL_NAME] = cmp.processCommand;
@@ -272,6 +299,10 @@ export const init = (): void => {
 
         cmp.cmpReady = true;
         cmp.notify('cmpReady');
+
+        if (shouldAccessTestCookie) {
+            log.info('CMP customise is ACTIVE');
+        }
     }
 };
 

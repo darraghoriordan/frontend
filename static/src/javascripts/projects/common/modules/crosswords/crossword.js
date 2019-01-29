@@ -6,8 +6,8 @@ import mediator from 'lib/mediator';
 import { isIOS, isBreakpoint } from 'lib/detect';
 import { scrollTo } from 'lib/scroller';
 import { AnagramHelper } from 'common/modules/crosswords/anagram-helper/main';
-import debounce from 'lodash/functions/debounce';
-import zip from 'lodash/arrays/zip';
+import debounce from 'lodash/debounce';
+import zip from 'lodash/zip';
 import { Clues } from 'common/modules/crosswords/clues';
 import { Controls } from 'common/modules/crosswords/controls';
 import { HiddenInput } from 'common/modules/crosswords/hidden-input';
@@ -374,7 +374,7 @@ class Crossword extends Component<*, CrosswordState> {
         const characterUppercase = character.toUpperCase();
         const cell = this.state.cellInFocus;
         if (
-            /[A-Za-zÀ-ÿ]/.test(characterUppercase) &&
+            /[A-Za-zÀ-ÿ0-9]/.test(characterUppercase) &&
             characterUppercase.length === 1 &&
             cell
         ) {
@@ -664,7 +664,7 @@ class Crossword extends Component<*, CrosswordState> {
         const cells = cellsForEntry(entry);
 
         if (entry.solution) {
-            const badCells = zip(cells, entry.solution)
+            const badCells = zip(cells, entry.solution.split(''))
                 .filter(cellAndSolution => {
                     const coords = cellAndSolution[0];
                     const cell = this.state.grid[coords.x][coords.y];

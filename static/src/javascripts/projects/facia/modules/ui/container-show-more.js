@@ -9,7 +9,7 @@ import mediator from 'lib/mediator';
 import reportError from 'lib/report-error';
 import timeout from 'lib/timeout';
 import userPrefs from 'common/modules/user-prefs';
-import groupBy from 'lodash/collections/groupBy';
+import groupBy from 'lodash/groupBy';
 import { isAdFreeUser } from 'common/modules/commercial/user-features';
 
 const HIDDEN_CLASS_NAME = 'fc-show-more--hidden';
@@ -81,7 +81,7 @@ const dedupShowMore = ($container: bonzo, html: string): bonzo => {
             $article.attr(ARTICLE_ID_ATTRIBUTE) in seenArticles ||
             (isAdFreeUser() &&
                 articleClass &&
-                articleClass.contains('paid-content'))
+                articleClass.includes('paid-content'))
         ) {
             $article.remove();
         }

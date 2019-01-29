@@ -3,8 +3,8 @@
 @import common.{LinkTo, Edition}
 @import views.support.RenderClasses
 @import navigation.NavMenu
-@import navigation.UrlHelpers.{getJobUrl, Header, getReaderRevenueUrl }
-@import navigation.ReaderRevenueSite.{Support, SupportSubscribe}
+@import navigation.UrlHelpers.{getJobUrl, Header, getReaderRevenueUrl, getSoulmatesUrl }
+@import navigation.ReaderRevenueSite.{Support, SupportSubscribe, SupportContribute}
 @import conf.switches.Switches.{ IdentityProfileNavigationSwitch, SearchSwitch }
 
 @defining(NavMenu(page, Edition(request))) { navMenu: NavMenu =>
@@ -17,10 +17,6 @@
             data-component="nav2"
             role="navigation"
             aria-label="Guardian sections">
-
-            @if(!page.metadata.hasSlimHeader) {
-                @fragments.nav.editionPickerDropdown()
-            }
 
             <a href="@LinkTo{/}"
                 class="new-header__logo"
@@ -35,45 +31,74 @@
                 }
             </a>
 
-            <div class="new-header__top-bar hide-until-mobile">
-                @defining(Edition(request).id.toLowerCase()) { editionId =>
 
+            <div class="new-header__cta-bar hide-until-mobile">
+                @defining(Edition(request).id.toLowerCase()) { editionId =>
                     @if(!page.metadata.hasSlimHeader) {
-                        <a class="top-bar__item top-bar__item--cta js-change-become-member-link js-acquisition-link"
-                            data-link-name="nav2 : supporter-cta"
+                        <div class="cta-bar__message hide-until-tablet">
+                            Support The&nbsp;Guardian
+                        </div>
+                    }
+
+                    <a class="cta-bar__cta hide-until-tablet js-change-become-member-link js-acquisition-link"
+                        data-link-name="nav2 : contribute-cta"
+                        data-edition="@{editionId}"
+                        href="@getReaderRevenueUrl(SupportContribute, Header)">
+                        Contribute
+                        @fragments.inlineSvg("arrow-right", "icon")
+                    </a>
+
+                    <a class="cta-bar__cta hide-until-tablet js-subscribe js-acquisition-link"
+                        data-link-name="nav2 : subscribe-cta"
+                        data-edition="@{editionId}"
+                        href="@getReaderRevenueUrl(SupportSubscribe, Header)">
+                        Subscribe
+                        @fragments.inlineSvg("arrow-right", "icon")
+                    </a>
+
+                    @if(editionId == "uk") {
+                        <a class="cta-bar__cta hide-from-tablet js-change-become-member-link js-acquisition-link"
+                            data-link-name="nav2 : support-cta"
                             data-edition="@{editionId}"
                             href="@getReaderRevenueUrl(Support, Header)">
+                            Support us
+                            @fragments.inlineSvg("arrow-right", "icon")
+                        </a>
+                    } else {
+                        <a class="cta-bar__cta hide-from-tablet js-change-become-member-link js-acquisition-link"
+                            data-link-name="nav2 : contribute-cta"
+                            data-edition="@{editionId}"
+                            href="@getReaderRevenueUrl(SupportContribute, Header)">
+                            Contribute
+                            @fragments.inlineSvg("arrow-right", "icon")
+                        </a>
+                    }
+                }
+            </div>
 
-                            <span class="top-bar__item--cta--circle"></span>
-                            <span class="top-bar__item--cta--text">
-                                @if(editionId == "us") {
-                                    Make a <br>contribution
-                                } else {
-                                    Support The <br>Guardian
+            <div class="new-header__top-bar hide-until-mobile">
+                @defining(Edition(request).id.toLowerCase()) { editionId =>
+                    @if(!page.metadata.hasSlimHeader) {
+                        @if(editionId != "au" || editionId == "uk") {
+                            <div class="top-bar__commercial-items">
+                                <span class="top-bar__item__seperator hide-until-desktop"></span>
+                                <a class="top-bar__item hide-until-desktop"
+                                data-link-name="nav2 : job-cta"
+                                data-edition="@{editionId}"
+                                href="@getJobUrl(editionId)">
+                                    Search jobs
+                                </a>
+
+                                @if(editionId == "uk") {
+                                    <a class="top-bar__item hide-until-desktop"
+                                    data-link-name="nav2 : soulmates-cta"
+                                    data-edition="@{editionId}"
+                                    href="@getSoulmatesUrl">
+                                        Dating
+                                    </a>
                                 }
-
-                            </span>
-                        </a>
-
-                        <a class="top-bar__item hide-until-tablet js-subscribe js-acquisition-link"
-                            data-link-name="nav2 : subscribe-cta"
-                            data-edition="@{editionId}"
-                            href="@getReaderRevenueUrl(SupportSubscribe,Header)">
-
-                            Subscribe
-                        </a>
-
-                        @if(editionId != "au") {
-                            <a class="top-bar__item hide-until-tablet"
-                            data-link-name="nav2 : job-cta"
-                            data-edition="@{editionId}"
-                            href="@getJobUrl(editionId)">
-
-                                <span class="hide-until-tablet">Find a job</span>
-                                <span class="hide-from-tablet">Jobs</span>
-                            </a>
+                            </div>
                         }
-
 
                         @if(IdentityProfileNavigationSwitch.isSwitchedOn) {
                             @fragments.nav.userAccountDropdown()
@@ -86,6 +111,7 @@
                                 data-link-name="nav2 : search"
                                 data-toggle="js-search-new"
                             >
+                                @fragments.inlineSvg("search-36", "icon", List("top-bar__item__icon"))
                                 Search
                             </a>
                         }
@@ -102,6 +128,10 @@
                 >
                     <div class="js-search-placeholder"></div>
                 </div>
+            }
+
+            @if(!page.metadata.hasSlimHeader) {
+                @fragments.nav.editionPickerDropdown()
             }
 
             <ul class="pillars">
@@ -147,7 +177,7 @@
         </nav>
 
         @if(!page.metadata.hasSlimHeader) {
-            @fragments.nav.subNav(navMenu)
+            @fragments.nav.subNav(navMenu, page.metadata.designType)
         }
     </header>
 }

@@ -1,66 +1,150 @@
 // @flow
 import React, { Component } from 'preact-compat';
-import { Checkbox } from '../checkbox/Checkbox';
-
-type OptOut = {
-    id: string,
-    title: string,
-    checked: boolean,
-};
+import { Checkbox } from 'common/modules/identity/upsell/checkbox/Checkbox';
+import { OptoutsExpanderButton } from 'common/modules/identity/upsell/button/OptoutsExpanderButton';
+import {
+    getAllUserConsents,
+    setConsentsInApi,
+} from 'common/modules/identity/upsell/store/consents';
+import type { ConsentWithState } from 'common/modules/identity/upsell/store/types';
+import { ErrorBar, genericErrorStr } from '../error-bar/ErrorBar';
 
 export class OptOutsList extends Component<
     {},
     {
-        optouts: OptOut[],
+        consents: ConsentWithState[],
+        isLoading: boolean,
+        hasUnsavedChanges: boolean,
+        errors: string[],
+        isExpanded: boolean,
     }
 > {
     constructor(props: {}) {
         super(props);
         this.state = {
-            optouts: [
-                {
-                    id: 'phone',
-                    title:
-                        'I do NOT wish to receive communications from the Guardian by telephone.',
-                    checked: false,
-                },
-                {
-                    id: 'mail',
-                    title: 'I do not want to be contacted by mail',
-                    checked: true,
-                },
-                {
-                    id: 'sms',
-                    title: 'I do not want to be contacted by SMS',
-                    checked: false,
-                },
-            ],
+            isLoading: false,
+            errors: [],
+            hasUnsavedChanges: true,
+            consents: [],
+            isExpanded: false,
         };
     }
 
-    onCheckboxChange = (ev: Event, i: number) => {
-        if (ev.currentTarget instanceof HTMLInputElement) {
-            const optoutsClone = [...this.state.optouts];
-            optoutsClone[i].checked = ev.currentTarget.checked;
+    componentDidMount() {
+        getAllUserConsents().then(consents => {
             this.setState({
-                optouts: optoutsClone,
+                consents: consents.filter(c => c.consent.isOptOut),
             });
-        }
+        });
+    }
+
+    onCheckboxChange = (consent: ConsentWithState) => {
+        this.setState(state => ({
+            hasUnsavedChanges: true,
+            consents: state.consents.map(
+                original =>
+                    original.uniqueId === consent.uniqueId ? consent : original
+            ),
+        }));
+    };
+
+    onSubmit = (ev: Event) => {
+        ev.preventDefault();
+        this.setState({
+            isLoading: true,
+            errors: [],
+        });
+        setConsentsInApi(this.state.consents)
+            .then(() => {
+                this.setState({
+                    hasUnsavedChanges: false,
+                    isLoading: false,
+                });
+            })
+            .catch(() => {
+                this.setState({
+                    errors: [genericErrorStr],
+                    isLoading: false,
+                });
+            });
+    };
+
+    updateExpandState = (isExpanded: boolean) => {
+        this.setState({
+            isExpanded,
+        });
     };
 
     render() {
+        const {
+            hasUnsavedChanges,
+            isLoading,
+            consents,
+            errors,
+            isExpanded,
+        } = this.state;
         return (
-            <div>
-                {this.state.optouts.map(({ title, checked, id }, i) => (
-                    <Checkbox
-                        title={title}
-                        key={id}
-                        checkboxHtmlProps={{
-                            checked,
-                            onChange: ev => this.onCheckboxChange(ev, i),
-                        }}
-                    />
-                ))}
+            <div
+                className={
+                    isExpanded
+                        ? 'identity-upsell-optouts'
+                        : 'identity-upsell-optouts identity-upsell-optouts--closed'
+                }>
+                <OptoutsExpanderButton
+                    isExpanded={isExpanded}
+                    linkName="upsell-optouts-expander"
+                    onToggle={this.updateExpandState}
+                    text="Change my preferences"
+                />
+                {isExpanded && (
+                    <div className="identity-upsell-optouts-expanded">
+                        <form onSubmit={ev => this.onSubmit(ev)}>
+                            <ul className="identity-forms-fields">
+                                <ErrorBar errors={errors} tagName="li" />
+                                <li>
+                                    {consents.map(consent => (
+                                        <Checkbox
+                                            title={consent.consent.description}
+                                            uniqueId={consent.uniqueId}
+                                            checkboxHtmlProps={{
+                                                checked: consent.hasConsented,
+                                                onChange: ev => {
+                                                    consent.setState(
+                                                        ev.currentTarget.checked
+                                                    );
+                                                    this.onCheckboxChange(
+                                                        consent
+                                                    );
+                                                },
+                                            }}
+                                        />
+                                    ))}
+                                </li>
+                                <li>
+                                    <div className="identity-upsell-button-with-proxy">
+                                        <button
+                                            data-link-name="upsell-consent : submit optouts"
+                                            type="submit"
+                                            disabled={isLoading}
+                                            className="manage-account__button manage-account__button--main">
+                                            Save preferences
+                                        </button>
+                                        {!hasUnsavedChanges && (
+                                            <span className="identity-upsell-button-with-proxy__proxy identity-upsell-button-with-proxy__proxy--success">
+                                                Changes saved
+                                            </span>
+                                        )}
+                                        {isLoading && (
+                                            <span className="identity-upsell-button-with-proxy__proxy">
+                                                Loading
+                                            </span>
+                                        )}
+                                    </div>
+                                </li>
+                            </ul>
+                        </form>
+                    </div>
+                )}
             </div>
         );
     }

@@ -118,7 +118,7 @@
 
 .email-sub__small {
     @include fs-textSans(1, $size-only: true);
-    color: $guardian-brand;
+    color: $brand-main;
     display: block;
     padding-left: $gs-baseline / 3;
     position: relative;
@@ -194,52 +194,72 @@
 
 // FOOTER MODS
 .footer__email-container .email-sub__iframe {
-    margin-left: 0;
-    width: 100%;
-    max-width: gs-span(6);
+    max-width: gs-span(4);
+    min-height: 90px;
+    margin: 0 0 $gs-baseline;
 }
 
 .email-sub__form--footer {
-    margin-bottom: $gs-baseline;
-    padding: 0 $gs-gutter;
-
     .email-sub__submit-button {
-        background-color: lighten($brightness-7, 5%);
-        border-color: lighten($brightness-7, 5%);
-        margin-bottom: $gs-baseline;
+        @include fs-textSans(5);
+        color: $brand-main;
+        height: 42px;
+        line-height: 40px;
+        background-color: $brightness-100;
+        border: 0;
+        border-radius: 21px;
+        display: block;
+        width: auto;
+        padding: 0 $gs-gutter;
+
+        &:not(.email-sub__submit-button--solo) {
+            position: absolute;
+            right: 0;
+            top: 34px;
+        }
+
+        & svg {
+            fill: currentColor;
+            margin-bottom: -1px;
+        }
 
         &:hover,
         &:focus,
         &:active {
-            background-color: $brightness-7;
-            border-color: $brightness-7;
+            background-color: $highlight-main;
+
         }
     }
 
     .email-sub__text-input {
-        background-color: darken($brightness-46, 20%);
-        border-color: darken($brightness-46, 20%);
-
-        &:hover {
-            background-color: darken($brightness-46, 15%);
-            border-color: darken($brightness-46, 15%);
-        }
-
-        &:active,
-        &:focus {
-            background-color: #ffffff;
-            border-color: #ffffff;
-        }
+        @include fs-textSans(5);
+        background-color: rgba($brightness-100, .08);
+        border: 1px solid $brand-pastel;
+        border-radius: 99px;
+        height: 42px;
+        line-height: 42px;
+        color: $brightness-100;
+        display: block;
+        padding-left: $gs-gutter;
+        float: none;
+        width: 100%;
+        overflow: visible;
+        transition: box-shadow .2s ease-in-out;
     }
 
     .email-sub__label {
-        color: $brightness-86;
+        @include fs-textSans(5);
+        line-height: 41px;
+        color: rgba($brightness-100, .5);
+        left: $gs-gutter;
+        position: absolute;
+        pointer-events: none;
     }
 }
 
 // LANDING PAGE MODS
 .email-sub--landing {
-    background-color: $guardian-brand;
+    background-color: $brand-main;
 
     .email-sub__description {
         padding: $gs-baseline $gs-gutter;
@@ -281,8 +301,8 @@
     }
 
     .email-sub__submit-button {
-        background-color: $guardian-brand;
-        border-color: $guardian-brand;
+        background-color: $brand-main;
+        border-color: $brand-main;
     }
 
     .email-sub__label,
@@ -301,7 +321,7 @@
     padding: 0;
 
     .email-sub__text-input {
-        border-color: $guardian-brand;
+        border-color: $brand-main;
     }
 }
 
